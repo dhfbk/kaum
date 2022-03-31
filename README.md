@@ -1,4 +1,4 @@
-# kaum
+# Kid_Actions user management
 
 ## Project setup
 ```
