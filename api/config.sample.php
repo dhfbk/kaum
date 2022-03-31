@@ -1,9 +1,9 @@
 <?php
 
-$DB_HOST = "mysql";
-$DB_USERNAME = "kaum";
-$DB_PASSWORD = "Tc7kU7HKzkC9N4/m";
-$DB_NAME = "kaum";
+$DB_HOST = "";
+$DB_USERNAME = "";
+$DB_PASSWORD = "";
+$DB_NAME = "";
 
 /*
 
