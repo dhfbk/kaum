@@ -1,5 +1,7 @@
 <?php
 
+use Rakit\Validation\Validator;
+
 // Global stuff
 
 $mysqli = @new mysqli($DB_HOST, $DB_USERNAME, $DB_PASSWORD, $DB_NAME);
@@ -7,16 +9,32 @@ if ($mysqli->connect_errno) {
     dieWithError("Error in DB connection: " . $mysqli->connect_error);
 }
 
-$_SESSION['Options'] = loadOptions();
-if (!isset($_SESSION['Options'])) {
+// $_SESSION['Options'] = loadOptions();
+if (!isset($_SESSION['Options']) || !$_SESSION['Options']) {
     $_SESSION['Options'] = loadOptions();
 }
 
 // Functions
 
+function validate($data, $rules) {
+    $validator = new Validator;
+    $validation = $validator->validate($data, $rules);
+    if ($validation->fails()) {
+        $errors = $validation->errors();
+        $errorList = $errors->firstOfAll();
+        dieWithError(implode(", ", $errorList));
+    }
+}
+
 function checkLogin() {
     if (!isset($_SESSION['Login'])) {
-        dieWithError("User not logged in");
+        dieWithError("User not logged in", 401);
+    }
+}
+
+function checkAdmin() {
+    if (!isset($_SESSION['Admin'])) {
+        dieWithError("Only admin can do that", 401);
     }
 }
 
@@ -27,7 +45,8 @@ function checkField($var, $err_msg) {
     return $var;
 }
 
-function dieWithError($text) {
+function dieWithError($text, $code = 400) {
+    http_response_code($code);
     $ret = array();
     $ret['result'] = "ERR";
     $ret['error'] = $text;
@@ -35,11 +54,17 @@ function dieWithError($text) {
     exit();
 }
 
-function loadOptions() {
+function loadOptions($api = false) {
     global $mysqli;
     
     $Options = array();
-    $query = "SELECT * FROM options";
+    if ($api) {
+        $query = "SELECT * FROM options WHERE api = '1'";
+    }
+    else {
+        $query = "SELECT * FROM options";
+    }
+    
     $result = $mysqli->query($query);
     while ($obj = $result->fetch_object()) {
         $Options[$obj->id] = $obj->value;
@@ -111,4 +136,16 @@ function randomPassword($len = 1) {
         $pass[] = $alphabet[$n];
     }
     return implode($pass); //turn the array into a string
+}
+
+function queryinsert($table, $a, $buff = 0) {
+    $array1 = $array2 = array();
+    foreach ($a as $i => $v) {
+        $array1[] = "`".$i."`";
+        $array2[] = "'".addslashes($v)."'";
+    }
+    $query = "INSERT INTO ".$table." (".
+        implode(", ", $array1).") VALUES (".
+        implode(", ", $array2).")";
+    return $query;
 }

@@ -13,7 +13,6 @@
 
 <script>
 import { defineComponent } from 'vue'
-// import { useI18n } from 'vue-i18n'
 import i18n from '../i18n.js';
 import { mapState } from 'vuex'
 
@@ -35,10 +34,14 @@ export default defineComponent({
     }
   },
   mounted() {
-    console.log(i18n.global.availableLocales);
+    console.log(this.$i18n);
+    console.log(this.$axios);
+    this.$axios.get("?", {"params": {"action": "login"}});
   },
   setup() {
     // console.log(this.$t);
+    // const $axios = inject('$axios');
+    // console.log($axios);
   },
 })
 </script>
