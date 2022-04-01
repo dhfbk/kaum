@@ -1,6 +1,7 @@
 {
     "require": {
         "rakit/validation": "^1.4.0",
-        "atdev/rocket-chat": "^1.0"
+        "atdev/rocket-chat": "^1.0",
+        "fpdf/fpdf": "^1.83"
     }
 }
