@@ -22,8 +22,8 @@ const updateAxiosParams = inject('updateAxiosParams');
 
 const values = ref({
   educators: store.state.options.project_default_educators,
-  students: store.state.options.project_default_students,
-  passwords: store.state.options.project_default_complexity
+  // students: store.state.options.project_default_students,
+  // passwords: store.state.options.project_default_complexity
 });
 const title = ref("");
 

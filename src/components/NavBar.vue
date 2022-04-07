@@ -25,18 +25,21 @@
 <script setup>
 import { inject } from 'vue'
 import { useStore } from 'vuex'
+import { useRouter } from 'vue-router';
 
 const axios = inject('axios')
 const updateAxiosParams = inject('updateAxiosParams');
 const store = useStore();
+const router = useRouter();
 
 function logout() {
-  axios.get("?", {"params": {"action": "logout", ...updateAxiosParams()}})
+  // No comment...
+  const params = {"params": {"action": "logout", ...updateAxiosParams()}};
+  store.commit("logout");
+  axios.get("?", params)
     .then(() => {
-      store.commit("logout");
+      router.push("/");
     });
-  // console.log("logout");
-  // store.commit("logout");
 }
 
 </script>

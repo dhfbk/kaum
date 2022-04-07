@@ -14,7 +14,37 @@ if (!isset($_SESSION['Options']) || !$_SESSION['Options']) {
     $_SESSION['Options'] = loadOptions();
 }
 
+mysqli_options($mysqli, MYSQLI_OPT_INT_AND_FLOAT_NATIVE, true);
+
 // Functions
+
+// https://stackoverflow.com/questions/6101956/generating-a-random-password-in-php
+function password_generate($length=8, $min_lowercases=1, $min_uppercases=1, $min_numbers=1, $min_specials=0) {
+
+    $lowercases = 'abcdefghjkmnpqrstuvwxyz';
+    $uppercases = 'ABCDEFGHJKMNPQRSTUVWXYZ';
+    $numbers = '23456789';
+    $specials = '!#%&?$*-+';
+
+    $absolutes = '';
+    if ($min_lowercases && !is_bool($min_lowercases)) $absolutes .= substr(str_shuffle(str_repeat($lowercases, $min_lowercases)), 0, $min_lowercases);
+    if ($min_uppercases && !is_bool($min_uppercases)) $absolutes .= substr(str_shuffle(str_repeat($uppercases, $min_uppercases)), 0, $min_uppercases);
+    if ($min_numbers && !is_bool($min_numbers)) $absolutes .= substr(str_shuffle(str_repeat($numbers, $min_numbers)), 0, $min_numbers);
+    if ($min_specials && !is_bool($min_specials)) $absolutes .= substr(str_shuffle(str_repeat($specials, $min_specials)), 0, $min_specials);
+
+    $remaining = $length - strlen($absolutes);
+
+    $characters = '';
+    if ($min_lowercases !== false) $characters .= substr(str_shuffle(str_repeat($lowercases, $remaining)), 0, $remaining);
+    if ($min_uppercases !== false) $characters .= substr(str_shuffle(str_repeat($uppercases, $remaining)), 0, $remaining);
+    if ($min_numbers !== false) $characters .= substr(str_shuffle(str_repeat($numbers, $remaining)), 0, $remaining);
+    if ($min_specials !== false) $characters .= substr(str_shuffle(str_repeat($specials, $remaining)), 0, $remaining);
+
+    $password = str_shuffle($absolutes . substr($characters, 0, $remaining));
+
+    return $password;
+}
+
 
 function validate($data, $rules) {
     $validator = new Validator;
@@ -26,14 +56,23 @@ function validate($data, $rules) {
     }
 }
 
+function isAdmin() {
+    return isset($_SESSION['Admin']) && $_SESSION['Admin'];
+}
+
+function taskInfo($taskID) {
+    $taskID = addslashes($taskID);
+
+}
+
 function checkLogin() {
-    if (!isset($_SESSION['Login'])) {
+    if (!isset($_SESSION['Login']) || !$_SESSION['Login']) {
         dieWithError("User not logged in", 401);
     }
 }
 
 function checkAdmin() {
-    if (!isset($_SESSION['Admin'])) {
+    if (!isAdmin()) {
         dieWithError("Only admin can do that", 401);
     }
 }
@@ -80,62 +119,14 @@ function find($table, $id, $text) {
     $stmt_up->execute();
     $r = $stmt_up->get_result();
     if ($r->num_rows) {
-        return $r->fetch_assoc();
+        $row = $r->fetch_assoc();
+        if ($row['data']) {
+            $row['data'] = json_decode($row['data'], true);
+        }
+        return $row;
     }
 
     dieWithError($text);
-}
-
-function generaPassword() {
-    $parole = array(
-        "topolino",
-        "pippo",
-        "paperino",
-        "gambadilegno",
-        "macchianera",
-        "bandabassotti",
-        "nonnapapera",
-        "paperina",
-        "minnie",
-        "pluto",
-        "archimede",
-        "clarabella",
-        "orazio",
-        "ziopaperone",
-        "gastone",
-        "paperoga",
-        "paperina",
-        "battista"
-        );
-    if (file_exists("random_words.txt")) {
-        $fn = fopen("random_words.txt", "r");
-        $parole = array();
-
-        while(!feof($fn))  {
-            $result = fgets($fn);
-            $result = trim($result);
-            if (strlen($result) > 0) {
-                $parole[] = $result;
-            }
-        }
-
-        fclose($fn);
-    }
-    $n = $parole[rand(0, count($parole) - 1)];
-    $n .= str_pad(rand(1, 999), 3, "0", STR_PAD_LEFT);
-    $n .= randomPassword();
-    return $n;
-}
-
-function randomPassword($len = 1) {
-    $alphabet = '!@#?%$';
-    $pass = array(); //remember to declare $pass as an array
-    $alphaLength = strlen($alphabet) - 1; //put the length -1 in cache
-    for ($i = 0; $i < $len; $i++) {
-        $n = rand(0, $alphaLength);
-        $pass[] = $alphabet[$n];
-    }
-    return implode($pass); //turn the array into a string
 }
 
 function queryinsert($table, $a, $buff = 0) {

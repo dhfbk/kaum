@@ -1,16 +1,15 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import HelloI18n from '@/views/HelloI18n.vue'
 import ProjectsView from '@/views/ProjectsView.vue'
+import HomeView from '@/views/HomeView.vue'
+import SingleProjectView from '@/views/SingleProjectView.vue'
 import ProjectFormView from '@/views/ProjectFormView.vue'
 
 const routes = [
   {
     path: '/',
-    beforeEnter: (to, from, next) => {
-      // Check login type
-      next("/projects");
-    },
-    name: 'home'
+    name: 'home',
+    component: HomeView
   },
   {
     path: '/i18n',
@@ -21,6 +20,11 @@ const routes = [
     path: '/projects',
     name: 'projects',
     component: ProjectsView
+  },
+  {
+    path: '/project/:id',
+    name: 'projectId',
+    component: SingleProjectView
   },
   {
     path: '/projects/new',
@@ -35,6 +39,6 @@ const routes = [
 const router = createRouter({
   history: createWebHashHistory(),
   routes
-})
+});
 
 export default router

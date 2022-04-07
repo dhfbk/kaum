@@ -13,7 +13,9 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 const app = createApp(App)
 	.use(store)
 	.use(router)
-	.use(i18n)
+	.use(i18n);
+
+router.store = store;
 
 // https://stackoverflow.com/questions/65184107/how-to-use-vue-prototype-or-global-variable-in-vue-3
 // app.config.globalProperties.$axios = axios;

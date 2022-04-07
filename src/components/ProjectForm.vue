@@ -1,20 +1,20 @@
 <template>
 <div class="container my-5">
     <form id="projectForm" class="needs-validation" novalidate @submit.stop.prevent="submit">
-        <div class="mb-3">
-            <label class="form-label" for="projectName">Project name</label>
-            <input v-model="values.name" :minlength="store.state.options.project_name_minlength"
-              name="name" class="form-control"
-              id="projectName" type="text" placeholder="Project name" required />
-            <div class="invalid-feedback">Project name must be more than 3 characters long.</div>
-        </div>
         <div class="row">
-          <div class="mb-3 col-md">
+          <div class="mb-3 col-md-9">
+              <label class="form-label" for="projectName">Project name</label>
+              <input v-model="values.name" :minlength="store.state.options.project_name_minlength"
+                name="name" class="form-control"
+                id="projectName" type="text" placeholder="Project name" required />
+              <div class="invalid-feedback">Project name must be more than 3 characters long.</div>
+          </div>
+          <div class="mb-3 col-md-3">
               <label class="form-label" for="numberOfEducators">Number of educators</label>
               <input v-model="values.educators" name="educators" class="form-control" id="numberOfEducators" type="number" min="1" :max="store.state.options.project_max_educators" placeholder="Number of educators" required />
               <div class="invalid-feedback">Number of educators is required and must be > 0.</div>
           </div>
-          <div class="mb-3 col-md">
+<!--          <div class="mb-3 col-md">
               <label class="form-label" for="numberOfStudents">Number of students</label>
               <input v-model="values.students" name="students" class="form-control" id="numberOfStudents" type="number" min="1" :max="store.state.options.project_max_students" placeholder="Number of students" required />
               <div class="invalid-feedback">Number of students is required and must be > 0.</div>
@@ -28,7 +28,7 @@
                 <option value="difficult">Difficult (random character sequence)</option>
               </select>
               <div class="invalid-feedback">Select a password complexity.</div>
-          </div>
+          </div>-->
         </div>
         <div class="text-end mt-md-5">
             <button class="btn btn-primary btn-lg" type="submit">Submit</button>

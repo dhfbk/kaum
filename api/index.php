@@ -8,6 +8,8 @@ header("Access-Control-Allow-Methods: OPTIONS,GET,POST,PUT,DELETE");
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
+use Ds\Map;
+
 // CORS stuff
 // https://stackoverflow.com/questions/53298478/has-been-blocked-by-cors-policy-response-to-preflight-request-doesn-t-pass-acce
 $method = $_SERVER['REQUEST_METHOD'];
@@ -15,6 +17,8 @@ if ($method == "OPTIONS") {
     http_response_code(200);
     exit();
 }
+
+http_response_code(500);
 
 ob_start();
 
@@ -35,6 +39,8 @@ require_once('vendor/autoload.php');
 require_once("config.php");
 require_once("include.php");
 
+use Fpdf\Fpdf;
+
 $Action = isset($_REQUEST['action']) ? $_REQUEST['action'] : "";
 $Options = $_SESSION['Options'];
 
@@ -51,25 +57,44 @@ switch ($Action) {
             if (isset($Options['admin_password']) && $Options['admin_password'] === md5($password)) {
                 $_SESSION['Admin'] = true;
                 $_SESSION['Login'] = -1;
-                $ret['result'] = "OK";
                 $ret['session_id'] = session_id();
                 break;
             }
             else {
-                dieWithError("Invalid login", 401);
+                dieWithError("Invalid admin login", 401);
             }
         }
         else {
-
+            $username = addslashes($username);
+            $query = "SELECT u.*, p.disabled
+                FROM users u
+                LEFT JOIN projects p ON u.project = p.id
+                WHERE u.username = '$username' AND u.educator = '1' AND p.deleted = '0'";
+            $result = $mysqli->query($query);
+            if (!$result->num_rows) {
+                dieWithError("User " . $username . " does not exist", 401);
+            }
+            $row = $result->fetch_array(MYSQLI_ASSOC);
+            if ($row['password'] != md5($password)) {
+                dieWithError("Invalid password", 401);
+            }
+            if ($row['disabled']) {
+                dieWithError("This project has been disabled", 401);
+            }
+            $_SESSION['Admin'] = false;
+            $_SESSION['Login'] = $row['id'];
+            $ret['session_id'] = session_id();
         }
         break;
 
     case "userinfo":
         checkLogin();
         $ret['options'] = loadOptions(true);
+        $ret['data'] = new Map();
         $ret['admin'] = $_SESSION['Admin'];
-
         break;
+
+    // PROJECTS
 
     case "projectList":
         checkAdmin();
@@ -82,29 +107,122 @@ switch ($Action) {
         }
         break;
 
+    case "projectConfirm":
+        checkAdmin();
+        $Row = find("projects", $_REQUEST['id'], "Unable to find project");
+        if (!$Row['data']['downloadedPasswords']) {
+            dieWithError("You need to download the passwords before confirming a project");
+        }
+        $query = "UPDATE users SET password = MD5(password)
+            WHERE project = '{$Row['id']}' AND educator = '1'";
+        $result = $mysqli->query($query);
+        if (!$result) {
+            dieWithError($mysqli->error);
+        }
+
+        $query = "UPDATE projects SET confirmed = '1' WHERE id = '${Row['id']}'";
+        $result = $mysqli->query($query);
+        if (!$result) {
+            dieWithError($mysqli->error);
+        }
+
+        break;
+
+    case "projectPasswords":
+        checkAdmin();
+        $Row = find("projects", $_REQUEST['id'], "Unable to find project");
+        if ($Row['confirmed']) {
+            dieWithError("Project already confirmed, you cannot download the passwords anymore");
+        }
+
+        $Row['data']['downloadedPasswords'] = true;
+        $dataJson = addslashes(json_encode($Row['data']));
+        $query = "UPDATE projects SET data = '$dataJson' WHERE id = '${Row['id']}'";
+        $result = $mysqli->query($query);
+        if (!$result) {
+            dieWithError($mysqli->error);
+        }
+
+
+        $pdf = new Fpdf();
+        $pdf->AddPage();
+        $pdf->SetFont('Arial', 'B', 16);
+        $pdf->Image('http://dh-hetzner.fbk.eu:8080/img/logo_kidactions4horizontal.png', null, null, 50);
+        $pdf->Ln();
+        $pdf->Cell(40, 15, "Passwords for project: " . $Row['name']);
+        $pdf->Ln();
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->Cell(60, 10, "Username", 1, 0, 'L');
+        $pdf->Cell(60, 10, "Name", 1, 0, 'L');
+        $pdf->Cell(50, 10, "Password", 1, 0, 'L');
+        $pdf->Ln();
+        $query = "SELECT *
+            FROM users
+            WHERE project = '{$Row['id']}' AND educator = '1' AND deleted = '0'";
+        $result = $mysqli->query($query);
+        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+            $data = json_decode($row['data'], true);
+            $pdf->Cell(60, 10, $row['username'], 1, 0, 'L');
+            $pdf->Cell(60, 10, $data['name'], 1, 0, 'L');
+            $pdf->Cell(50, 10, $row['password'], 1, 0, 'L');
+            $pdf->Ln();
+        }
+        $pdf->Output();
+        exit();
+        break;
+
+    case "projectToggleAvailability":
+        checkAdmin();
+        $Row = find("projects", $_REQUEST['id'], "Unable to find project");
+        $query = "UPDATE projects SET disabled = NOT disabled WHERE id = '${Row['id']}'";
+        $result = $mysqli->query($query);
+        if (!$result) {
+            dieWithError($mysqli->error);
+        }
+        break;
+
     case "projectAdd":
         checkAdmin();
         // missing validation
-        $data = $_REQUEST['info'];
+        $orig_data = $_REQUEST['info'];
 
-        validate($data, [
+        validate($orig_data, [
             'name' => 'required|min:' . $Options['project_name_minlength'],
             'educators' => 'required|numeric|min:1|max:' . $Options['project_max_educators'],
-            'students' => 'required|numeric|min:1|max:' . $Options['project_max_students'],
-            'passwords' => 'required|in:trivial,easy,difficult'
-            // 'passwords' => 'required|in:a,b,c'
+            // 'students' => 'required|numeric|min:1|max:' . $Options['project_max_students'],
+            // 'passwords' => 'required|in:trivial,easy,difficult'
         ]);
 
-        $data = ["name" => $data['name'], "data" => json_encode($data)];
+        $data = ["name" => $orig_data['name'], "data" => json_encode($orig_data)];
         $query = queryinsert("projects", $data);
         $result = $mysqli->query($query);
         if (!$result) {
             dieWithError($mysqli->error);
         }
+
+        $projectID = $mysqli->insert_id;
+        for ($i = 0; $i < $orig_data['educators']; $i++) {
+            $data = [];
+            $data['project'] = $projectID;
+            $data['username'] = "pr" . $projectID . "-educator" . ($i + 1);
+            $data['password'] = password_generate(8);
+            $data['educator'] = 1;
+            $data['data'] = json_encode(["name" => ""]);
+
+            $query = queryinsert("users", $data);
+            $result = $mysqli->query($query);
+            if (!$result) {
+                dieWithError($mysqli->error);
+            }
+        }
         // $ret['data'] = $data;
         // $ret['query'] = $query;
         // $ret['result'] = print_r($result, true);
         break;
+
+    case "taskList":
+        checkLogin();
+        $info = taskInfo($_REQUEST['id']);
 
     case "cleanOptions":
         unset($_SESSION['Options']);
@@ -121,4 +239,5 @@ switch ($Action) {
 
 // $ret['login_info'] = ['user' => $_SESSION['Login'], 'admin' => $_SESSION['Admin']];
 // $ret['_session'] = $_SESSION;
+http_response_code(200);
 echo json_encode($ret);
