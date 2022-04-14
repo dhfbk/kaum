@@ -60,11 +60,6 @@ function isAdmin() {
     return isset($_SESSION['Admin']) && $_SESSION['Admin'];
 }
 
-function taskInfo($taskID) {
-    $taskID = addslashes($taskID);
-
-}
-
 function checkLogin() {
     if (!isset($_SESSION['Login']) || !$_SESSION['Login']) {
         dieWithError("User not logged in", 401);
@@ -75,6 +70,36 @@ function checkAdmin() {
     if (!isAdmin()) {
         dieWithError("Only admin can do that", 401);
     }
+}
+
+function checkProject($id, $userID = 0) {
+    if (!$userID) {
+        $userID = $_SESSION['Login'];
+    }
+
+    $Row = find("projects", $id, "Unable to find project");
+    if (isAdmin()) {
+        return $Row;
+    }
+
+    $RowUser = find("users", $userID, "Unable to find user");
+    if ($RowUser['project'] != $id) {
+        dieWithError("Access denied", 401);
+    }
+    if ($RowUser['data']['disabled']) {
+        dieWithError("User is disabled");
+    }
+
+    if ($Row['deleted']) {
+        dieWithError("Unable to find project");
+    }
+    if ($Row['disabled']) {
+        dieWithError("Project is disabled");
+    }
+    if (!$Row['confirmed']) {
+        dieWithError("Project needs to be confirmed by an administrator");
+    }
+    return $Row;
 }
 
 function checkField($var, $err_msg) {

@@ -69,7 +69,8 @@ switch ($Action) {
             $query = "SELECT u.*, p.disabled
                 FROM users u
                 LEFT JOIN projects p ON u.project = p.id
-                WHERE u.username = '$username' AND u.educator = '1' AND p.deleted = '0'";
+                WHERE u.username = '$username' AND u.educator = '1'
+                    AND p.deleted = '0' AND u.deleted = '0'";
             $result = $mysqli->query($query);
             if (!$result->num_rows) {
                 dieWithError("User " . $username . " does not exist", 401);
@@ -78,9 +79,7 @@ switch ($Action) {
             if ($row['password'] != md5($password)) {
                 dieWithError("Invalid password", 401);
             }
-            if ($row['disabled']) {
-                dieWithError("This project has been disabled", 401);
-            }
+            checkProject($row['project'], $row['id']);
             $_SESSION['Admin'] = false;
             $_SESSION['Login'] = $row['id'];
             $ret['session_id'] = session_id();
@@ -90,8 +89,15 @@ switch ($Action) {
     case "userinfo":
         checkLogin();
         $ret['options'] = loadOptions(true);
-        $ret['data'] = new Map();
-        $ret['admin'] = $_SESSION['Admin'];
+        $ret['data'] = ["id" => $_SESSION['Login']];
+        $ret['admin'] = false;
+        if (isAdmin()) {
+            $ret['admin'] = true;
+        }
+        else {
+            $Row = find("users", $_SESSION['Login'], "Unable to find user");
+            $ret['data']['project'] = $Row['project'];
+        }
         break;
 
     // PROJECTS
@@ -207,7 +213,7 @@ switch ($Action) {
             $data['username'] = "pr" . $projectID . "-educator" . ($i + 1);
             $data['password'] = password_generate(8);
             $data['educator'] = 1;
-            $data['data'] = json_encode(["name" => ""]);
+            $data['data'] = json_encode(["name" => "", "disabled" => false]);
 
             $query = queryinsert("users", $data);
             $result = $mysqli->query($query);
@@ -220,9 +226,28 @@ switch ($Action) {
         // $ret['result'] = print_r($result, true);
         break;
 
-    case "taskList":
+    case "projectInfo":
         checkLogin();
-        $info = taskInfo($_REQUEST['id']);
+        $info = checkProject($_REQUEST['id']);
+
+        $educators = [];
+        $query = "SELECT * FROM users
+            WHERE project = '{$info['id']}' AND deleted = '0' AND educator = '1'";
+        $result = $mysqli->query($query);
+        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+            $educator = json_decode($row['data'], true);
+            $educator['username'] = $row['username'];
+            $educator['id'] = $row['id'];
+            $educators[] = $educator;
+        }
+
+        $info['educators'] = $educators;
+
+        $tasks = [];
+        $info['tasks'] = $tasks;
+
+        $ret['info'] = $info;
+        break;
 
     case "cleanOptions":
         unset($_SESSION['Options']);
