@@ -24,13 +24,24 @@ const routes = [
   {
     path: '/project/:id',
     name: 'projectId',
-    component: SingleProjectView
+    component: SingleProjectView,
+    meta: {
+      action: "list"
+    }
+  },
+  {
+    path: '/project/:id/new',
+    name: 'projectIdNewTask',
+    component: SingleProjectView,
+    meta: {
+      action: "add"
+    }
   },
   {
     path: '/projects/new',
     name: 'newProject',
     component: ProjectFormView,
-    props: {
+    meta: {
       action: "add"
     }
   }

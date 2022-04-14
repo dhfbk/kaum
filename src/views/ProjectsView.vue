@@ -1,5 +1,5 @@
 <template>
-  <div class="row">
+  <div class="row align-items-end">
     <div class="col-md-9">
       <h1>
         Project list
@@ -75,7 +75,9 @@ const projectList = ref([]);
 const projectLoading = ref(new Set());
 
 function getPasswords(id) {
-  window.location.assign(axios.defaults.baseURL + "?action=projectPasswords&id=" + id);
+  let params = {"action": "projectPasswords", "id": id, ...updateAxiosParams()};
+  let usp = new URLSearchParams(params).toString();
+  window.open(axios.defaults.baseURL + "?" + usp).focus();
 }
 
 function enterProject(id) {

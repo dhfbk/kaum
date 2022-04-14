@@ -17,7 +17,7 @@ onMounted(function() {
     router.replace({path: "/projects"});
   }
   else if (store.state.loggedIn) {
-    router.replace({path: "/project"});
+    router.replace({path: "/project/" + store.state.data.project});
   }
 });
 </script>
