@@ -1,34 +1,35 @@
-import { createStore } from 'vuex'
+import {createStore} from 'vuex'
 
 export default createStore({
-  state: {
-    loggedIn: false,
-    loggedAdmin: false,
-    options: {},
-    data: {}
-  },
-  getters: {
-  },
-  mutations: {
-    login(state, payload) {
-      state.loggedIn = true;
-      state.loggedAdmin = payload.admin;
-      state.options = payload.options;
-      state.data = payload.data;
-      if (payload.sess_id !== undefined) {
-        localStorage.setItem('php_sess_id', payload.sess_id);
-      }
+    state: {
+        loggedIn: false,
+        loggedAdmin: false,
+        options: {},
+        data: {}
     },
-    logout(state) {
-      state.loggedIn = false;
-      state.loggedAdmin = false;
-      state.options = {};
-      state.data = {};
-      localStorage.removeItem('php_sess_id');
-    }
-  },
-  actions: {
-  },
-  modules: {
-  }
+    getters: {},
+    mutations: {
+        sessionOnly(state, payload) {
+            localStorage.setItem('php_sess_id', payload.sess_id);
+            state.loggedAdmin = payload.admin;
+        },
+        login(state, payload) {
+            state.loggedIn = true;
+            state.loggedAdmin = payload.admin;
+            state.options = payload.options;
+            state.data = payload.data;
+            if (payload.sess_id !== undefined) {
+                localStorage.setItem('php_sess_id', payload.sess_id);
+            }
+        },
+        logout(state) {
+            state.loggedIn = false;
+            state.loggedAdmin = false;
+            state.options = {};
+            state.data = {};
+            localStorage.removeItem('php_sess_id');
+        }
+    },
+    actions: {},
+    modules: {}
 })

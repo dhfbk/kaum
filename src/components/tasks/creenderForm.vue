@@ -1,9 +1,9 @@
 <template>
-	<div class="row">
-		<div class="col">
-			Funzionalità ancora non disponibile.
-		</div>
-	</div>
+    <div class="row">
+        <div class="col">
+            Funzionalità ancora non disponibile.
+        </div>
+    </div>
 </template>
 
 <script setup>
