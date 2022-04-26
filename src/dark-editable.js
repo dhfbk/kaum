@@ -1,5 +1,7 @@
 import {Popover} from "bootstrap";
 
+/* eslint-disable */
+
 export default class DarkEditable {
     constructor(element, options = {}) {
         this._element = {element: null, form: null, load: null, buttons: {success: null, cancel: null}}

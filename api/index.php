@@ -596,6 +596,9 @@ switch ($Action) {
                 break;
 
             default:
+                validate($InputData, [
+                    'type' => 'required|in:' . implode(",", array_keys($TaskTypes)),
+                ]);
                 @include("tasks/" . $InputData['type'] . "/_actions.php");
                 break;
         }
