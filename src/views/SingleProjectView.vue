@@ -17,7 +17,7 @@
     </template>
 
     <template v-else-if="route.meta.action === 'task'">
-        Single task
+        <TaskMain :id="route.params.id" :task="route.params.task"></TaskMain>
     </template>
 </template>
 
@@ -28,6 +28,7 @@ import {useRoute, useRouter} from 'vue-router'
 
 import TaskForm from '@/components/TaskForm.vue'
 import ProjectMain from '@/components/ProjectMain.vue'
+import TaskMain from '@/components/TaskMain'
 
 const store = useStore();
 const route = useRoute();

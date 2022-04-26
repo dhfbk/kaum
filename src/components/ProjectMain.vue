@@ -89,6 +89,7 @@ import {defineProps, ref, defineEmits, onMounted, inject} from "vue";
 import {useStore} from "vuex";
 
 import PicButton from "@/components/PicButton";
+import {useRoute, useRouter} from "vue-router";
 
 const showModalWindow = inject('showModalWindow');
 const axios = inject('axios');
@@ -108,6 +109,9 @@ const basicLoading = ref(true);
 const projectInfo = ref({});
 const taskLoading = ref(new Set());
 
+const router = useRouter();
+const route = useRoute();
+
 function getUsersPasswords(taskID) {
     console.log("Passwords: " + taskID);
     let params = {
@@ -121,6 +125,7 @@ function getUsersPasswords(taskID) {
 }
 
 function enterTask(taskID) {
+    router.push('/project/' + route.params.id + '/' + taskID)
     console.log(taskID);
 }
 

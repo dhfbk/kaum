@@ -31,7 +31,7 @@
             </div>
         </div>
         <div class="col-md-6">
-            <label class="form-label" for="channelName">Channel name (letters and dashes)</label>
+            <label class="form-label" for="channelName">Channel name (letters, numbers and dashes)</label>
             <input v-model="values.type_info['channel_name']" :minlength="3"
                    name="channelname" class="form-control"
                    id="channelName" type="text" placeholder="Channel name" required/>
