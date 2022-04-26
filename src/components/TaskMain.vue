@@ -3,8 +3,10 @@
     <template v-else>
         <h1>
             Task: {{ taskInfo.name }}
-            <small class="text-muted">Project: {{ taskInfo.project_info.name }}</small>
         </h1>
+        <h2>
+            Project: {{ taskInfo.project_info.name }}
+        </h2>
         <div class="row mt-5">
             <div class="col-md-9">
                 <h2>
@@ -38,24 +40,35 @@
             </tr>
             </tbody>
         </table>
+
+        <component :is="component" :values="taskInfo"/>
+
+        <div class="row mt-5">
+            <div class="col text-end">
+                <button class="btn btn-warning btn-lg ms-3" @click.prevent="back()">Back</button>
+            </div>
+        </div>
     </template>
 </template>
 
 <script setup>
 
 // import {useRoute} from "vue-router";
-import {ref, onMounted, defineProps, inject, nextTick} from "vue";
+import {defineAsyncComponent, shallowRef, ref, onMounted, defineProps, inject, nextTick} from "vue";
+import {useRoute, useRouter} from "vue-router";
 // import DarkEditable from '@/dark-editable'
 const DarkEditable = require('@/dark-editable.js').default;
 // const pippo = new DarkEditable(document.getElementById("ciao"));
 // console.log(pippo);
 
 // new dark.DarkEditable();
-// const route = useRoute();
+const router = useRouter();
+const route = useRoute();
 const axios = inject('axios');
 const updateAxiosParams = inject('updateAxiosParams');
 const showModalWindow = inject('showModalWindow');
 
+const component = shallowRef(null);
 const basicLoading = ref(true);
 const taskInfo = ref({});
 
@@ -68,6 +81,10 @@ const props = defineProps({
     }
 });
 
+function back() {
+    router.push("/project/" + route.params.id);
+}
+
 async function updateTask() {
     axios.get("?", {
         "params": {
@@ -75,8 +92,12 @@ async function updateTask() {
         }
     })
         .then(async (response) => {
-            basicLoading.value = false;
             taskInfo.value = response.data.info;
+            component.value = defineAsyncComponent(() =>
+                import(`@/components/tasks/${taskInfo.value.tool}Main.vue`)
+            )
+            basicLoading.value = false;
+
             await nextTick();
             let darkList = document.getElementsByClassName("dark-enable");
             for (let d of darkList) {
@@ -100,16 +121,16 @@ async function updateTask() {
                     pk: d.dataset.username,
                     url: axios.defaults.baseURL + "?" + u,
                     ajaxOptions: {dataType: "json"},
-                    error: function(response) {
-                        return response.json().then(function(data) {
+                    error: function (response) {
+                        return response.json().then(function (data) {
                             showModalWindow(data.error);
                         });
                     },
-                    success: function (response, newValue) {
-                        response.json().then(function(data) {
-                            console.log(data);
-                        });
-                    },
+                    // success: function (response, newValue) {
+                    //     response.json().then(function(data) {
+                    //         console.log(data);
+                    //     });
+                    // },
                     title: 'Enter username'
                 });
             }
