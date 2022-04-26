@@ -5,8 +5,8 @@ validate($Info['type_info'], [
     'description' => 'required'
 ]);
 
-if (!preg_match('/^[a-z-]+$/', $Info['type_info']['channel_name'])) {
-    dieWithError("The channel name must include only lowercase letters and dashes");
+if (!preg_match('/^[a-z0-9-]+$/', $Info['type_info']['channel_name'])) {
+    dieWithError("The channel name must include only lowercase letters, numbers and dashes");
 }
 
 if (strpos($Info['type_info']['channel_name'], "--") !== false) {

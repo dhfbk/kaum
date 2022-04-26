@@ -394,16 +394,81 @@ switch ($Action) {
     case "task":
         $InputData = $_REQUEST;
         validate($InputData, [
-            'type' => 'required|in:' . implode(",", array_keys($TaskTypes)),
             'sub' => 'required|alpha_num',
         ]);
 
         // @include("tasks/" . $InputData['type'] . "/_common.php");
 
         switch ($InputData['sub']) {
+            case "changeUserName":
+                $Username = addslashes($_REQUEST['pk']);
+                $query = "SELECT * FROM users
+                    WHERE username = '{$Username}' AND deleted = '0'";
+                $result = $mysqli->query($query);
+                $RowUser = $result->fetch_array(MYSQLI_ASSOC);
+                $UserData = json_decode($RowUser['data'], true);
+                if (!$RowUser) {
+                    dieWithError("User {$Username} does not exist");
+                }
+
+                $Row = [];
+                if ($RowUser['educator']) {
+                    $Row = checkProject($RowUser['project']);
+                    if (!isAdmin() && $RowUser['id'] != $_SESSION['Login']) {
+                        dieWithError("Unauthorized operation", 401);
+                    }
+                }
+                else {
+                    $Row = checkTask($RowUser['task'], 0, $RowUser['project']);
+                }
+
+                $NewValue = $_REQUEST['value'];
+                if (strlen($NewValue) > $Options['max_user_name_len']) {
+                    dieWithError("Name length cannot exceed {$Options['max_user_name_len']} chars");
+                }
+
+                $UserData['name'] = $NewValue;
+                $dataJson = addslashes(json_encode($UserData));
+                $query = "UPDATE users SET data = '$dataJson' WHERE id = '{$RowUser['id']}'";
+                $mysqli->query($query);
+
+                if ($RowUser['educator']) {
+                    foreach ($TaskTypes as $index => $taskName) {
+                        @include("tasks/" . $index . "/_changeUserName.php");
+                    }                    
+                }
+                else {
+                    @include("tasks/" . $Row['tool'] . "/_changeUserName.php");
+                }
+
+                // $ret['username'] = $_REQUEST['pk'];
+                // $Row = checkTask($_REQUEST['id'], 0, $_REQUEST['project_id']);
+                // dieWithError("Cacca");
+                // print_r($_REQUEST);
+                // $ret['ret'] = $_REQUEST;
+                break;
+
+            case "info":
+                $Row = checkTask($_REQUEST['id'], 0, $_REQUEST['project_id']);
+                $ret['info'] = $Row;
+                $ret['info']['students'] = [];
+                $query = "SELECT * FROM users
+                    WHERE task = '{$Row['id']}' AND educator = '0' AND deleted = '0'";
+                $result = $mysqli->query($query);
+                while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+                    $row['data'] = json_decode($row['data'], true);
+                    $ret['info']['students'][] = $row;
+                }
+                // $ret['project_info'] = checkProject($)
+                break;
+
             case "add":
 
                 // TODO: depending on project, check that the type is active
+
+                validate($InputData, [
+                    'type' => 'required|in:' . implode(",", array_keys($TaskTypes)),
+                ]);
 
                 $projectInfo = checkProject($_REQUEST['project_id']);
                 $ProjectID = $projectInfo['id'];

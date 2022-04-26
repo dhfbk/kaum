@@ -6,28 +6,48 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
+\ATDev\RocketChat\Chat::setUrl(RC_URL);
+$result = \ATDev\RocketChat\Chat::login("admin", $rcPassword);
+if (!$result) {
+    $error = \ATDev\RocketChat\Chat::getError();
+    dieWithError($error);
+}
+
 switch ($InputData['sub']) {
     case "test":
-        \ATDev\RocketChat\Chat::setUrl(RC_URL);
-        $result = \ATDev\RocketChat\Chat::login("admin", $rcPassword);
-        if (!$result) {
-            $error = \ATDev\RocketChat\Chat::getError();
-            dieWithError($error);
+        $group = new \ATDev\RocketChat\Groups\Group("88Mg3CCkD5azLKoxN");
+        $result = $group->messages();
+        foreach ($result as $message) {
+            $t = $message->getT();
+            if ($t) {
+                continue;
+            }
+            echo $message->getUsername() . " - ";
+            echo $message->getMsg() . "\n";
+            // print_r($message);
         }
 
-        $user = new \ATDev\RocketChat\Users\User("t6-user1");
-        $i = $user->info();
-        print_r($i);
-        print_r($user);
+        // $listing = \ATDev\RocketChat\Groups\Group::listing();
+        // foreach ($listing as $group) {
+        //     print_r($group);
+        // }
+
+        // print_r($listing[0]->getGroupId());
+        // $user = new \ATDev\RocketChat\Users\User("t6-user1");
+        // $i = $user->info();
+        // print_r($i);
+        // print_r($user);
         break;
 
     case "sos":
         $ret['input'] = $_REQUEST;
-        $ret['message'] = "SOS received - " . print_r($_REQUEST, true);
+        $ret['message'] = "SOS received";
+        $ret['avatar'] = ":sos:";
 
         $username = addslashes($_REQUEST['username']);
         if (!$username) {
             $ret['message'] = "Invalid username - SOS *not* received by the system";
+            $ret['avatar'] = ":warning:";
             break;
         }
 
@@ -48,14 +68,16 @@ switch ($InputData['sub']) {
         }
         else {
             $ret['message'] = "Unable to find user {$username} - SOS *not* received by the system";
+            $ret['avatar'] = ":warning:";
             break;
         }
 
         // $ret['user_data'] = $RowUser;
         // $ret['task_data'] = $TaskData;
 
-        if ($TaskData['teacher_can_join']) {
+        if ($TaskData['type_info']['teacher_can_join']) {
             $ret['message'] = "In this task educators can already join the chat - SOS *not* received by the system";
+            $ret['avatar'] = ":warning:";
             break;
         }
 
@@ -63,6 +85,36 @@ switch ($InputData['sub']) {
             $TaskData['sos_info'] = [];
         }
 
+        $RoomID = $TaskData['type_info']['channel_id'];
+
+        $query = "SELECT * FROM users
+            WHERE educator = '1' AND deleted = '0' AND project = '{$RowUser['project']}'";
+        $result = $mysqli->query($query);
+        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+            $data = json_decode($row['data'], true);
+            if ($data['disabled']) {
+                continue;
+            }
+
+            $user = new \ATDev\RocketChat\Users\User($row['username']);
+            $user->info();
+
+            $channelName = $data['type_info']['channel_name'];
+            $group = new \ATDev\RocketChat\Groups\Group($RoomID);
+            $i = $group->info();
+
+            $r = $group->invite($user);
+
+        }
+
+        if (!count($TaskData['sos_info'])) {
+            $message = new \ATDev\RocketChat\Messages\Message();
+            $message->setRoomId($RoomID);
+            $message->setEmoji(":sos:");
+            $message->setText("Someone has called the SOS command, an educator will join the room soon");
+            $result = $message->postMessage();
+        }
+        
         $sos_info = [];
         $sos_info['username'] = $_REQUEST['username'];
         $sos_info['message'] = $_REQUEST['message'];

@@ -1,5 +1,14 @@
 <?php
 
+if (!$TaskID) {
+    exit();
+}
+
+/*
+    Constants: RC_URL
+    Variables: $TaskID, $Info (editable), $rcPassword
+*/
+
 \ATDev\RocketChat\Chat::setUrl(RC_URL);
 $result = \ATDev\RocketChat\Chat::login("admin", $rcPassword);
 if (!$result) {
@@ -15,6 +24,7 @@ try {
     $group = new \ATDev\RocketChat\Groups\Group();
     $group->setName($groupName);
     $result = $group->create();
+    $Info['type_info']['channel_id'] = $group->getGroupId();
     // $ret['log'][] = "Group {$groupName} created successfully";
 } catch (Exception $e) {
     // $ret['log'][] = "Error in creating group {$groupName}: " . $e->getMessage();
@@ -67,5 +77,20 @@ while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
 
 $message = new \ATDev\RocketChat\Messages\Message();
 $message->setRoomId($groupName);
+// $message->setAlias("Kid Actions Admin");
+// $message->setEmoji(":house:");
 $message->setText($Info['type_info']['description']);
 $result = $message->postMessage();
+
+if (!$Info['type_info']['teacher_can_join']) {
+    $message = new \ATDev\RocketChat\Messages\Message();
+    $message->setRoomId($groupName);
+    // $message->setAlias("Kid Actions Admin");
+    $message->setEmoji(":sos:");
+    $message->setText("Educators cannot join this conversation. If you send */sos* (slash + sos) in the chat, the educators are notified and are allowed to the chat. Other users are notified that someone asks for help, but the caller's identity is not revealed.");
+    $result = $message->postMessage();
+}
+
+$dataJson = addslashes(json_encode($Info));
+$query = "UPDATE tasks SET data = '$dataJson' WHERE id = '{$TaskID}'";
+$mysqli->query($query);

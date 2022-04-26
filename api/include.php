@@ -155,6 +155,7 @@ function getTasks($project_id, $getStudents = false) {
 function checkTask($id, $userID = 0, $projectID = 0) {
     $Row = find("tasks", $id, "Unable to find task");
     if (isAdmin()) {
+        $Row['project_info'] = find("projects", $Row['project_id'], "Unable to find project");
         return $Row;
     }
 
@@ -176,7 +177,8 @@ function checkTask($id, $userID = 0, $projectID = 0) {
     if ($projectID && $projectID != $RowUser['project']) {
         dieWithError("Wrong project ID");
     }
-    checkProjectAvailability($Row['project_id']);
+    $RowProject = checkProjectAvailability($Row['project_id']);
+    $Row['project_info'] = $RowProject;
 
     return $Row;
 }
@@ -186,7 +188,8 @@ function checkTaskAvailability($id) {
     if ($Row['deleted']) {
         dieWithError("Unable to find task");
     }
-    checkProjectAvailability($Row['project_id']);
+    $RowProject = checkProjectAvailability($Row['project_id']);
+    $Row['project_info'] = $RowProject;
     if ($Row['disabled']) {
         dieWithError("Task is disabled");
     }
