@@ -2,7 +2,124 @@
 
 switch ($InputData['sub']) {
     case "listDatasets":
-        $projectInfo = checkProject($InputData['project_id']);
-        $ret['datasets'] = hssh_listDatasets($projectInfo['project_id']);
+        $RowProject = checkProject($InputData['project_id']);
+        $ret['datasets'] = hssh_listDatasets($RowProject['id']);
+        break;
+
+    case "saveAnnotation":
+        checkStudentLogin();
+        $RowTask = checkTask();
+        validate($_REQUEST, [
+            'sentence_id' => 'required|integer',
+            'tokens' => 'required'
+        ]);
+        $id = addslashes($_REQUEST['sentence_id']);
+        $UserData = $RowTask['user_info']['data'];
+        $cluster = addslashes($UserData['rc_cluster']);
+        $query = "SELECT c.id,
+                   r.content,
+                   GROUP_CONCAT(a.session_id) annotations
+            FROM   `hssh_ds_task_cluster` c
+                   LEFT JOIN hssh_rows r
+                          ON r.id = c.row
+                   LEFT JOIN hssh_datasets d
+                          ON d.id = r.dataset_id
+                   LEFT JOIN hssh_annotations a
+                          ON a.sentence = c.id
+            WHERE  c.task = '{$RowTask['id']}'
+                   AND c.cluster = '{$cluster}'
+                   AND c.id = '{$id}'
+            GROUP  BY c.id,
+                      r.content";
+        // $ret['query'] = str_replace("\n", " ", $query);
+        $result = $mysqli->query($query);
+        if (!$result->num_rows) {
+            dieWithError("Wrong sentence ID");
+        }
+
+        // TODO: Check length?
+        // $row = $result->fetch_array(MYSQLI_ASSOC);
+
+        // TODO: Check tokens
+
+        $ret['request'] = $_REQUEST;
+
+        break;
+
+    case "sentences":
+        checkStudentLogin();
+        $RowTask = checkTask();
+        validate($_REQUEST, [
+            'set' => 'required|in:ch,gr',
+            'limit' => 'integer|min:1',
+            'offset' => 'integer|min:0',
+        ]);
+        $UserData = $RowTask['user_info']['data'];
+        $cluster = addslashes($UserData['rc_cluster']);
+        $set = addslashes($_REQUEST['set']);
+        $limit = $_REQUEST['limit'] ? $_REQUEST['limit'] : 100;
+        $offset = $_REQUEST['offset'] ? $_REQUEST['offset'] : 0;
+        $session_id = session_id();
+        $query = "SELECT c.id,
+                   r.content,
+                   GROUP_CONCAT(a.session_id) annotations
+            FROM   `hssh_ds_task_cluster` c
+                   LEFT JOIN hssh_rows r
+                          ON r.id = c.row
+                   LEFT JOIN hssh_datasets d
+                          ON d.id = r.dataset_id
+                   LEFT JOIN hssh_annotations a
+                          ON a.sentence = c.id
+            WHERE  c.task = '{$RowTask['id']}'
+                   AND c.cluster = '{$cluster}'
+                   AND d.type = '{$set}'
+                   AND c.id NOT IN (SELECT sentence
+                                    FROM   hssh_annotations
+                                    WHERE  user = '{$RowTask['user_info']['id']}'
+                                           AND deleted = '0'
+                                           AND session_id != '{$session_id}')
+            GROUP  BY c.id,
+                      r.content";
+        // $ret['query'] = str_replace("\n", " ", $query);
+        $result = $mysqli->query($query);
+        $offset = $offset % $result->num_rows;
+        $total = $offset + $limit;
+
+        // $ret['total'] = $total;
+        // $ret['offset'] = $offset;
+
+        $thisIndex = 0;
+        $ret['sentences'] = [];
+        for ($i = $offset; $i < $total; $i++) {
+            $query_id = $i % $result->num_rows;
+            $result->data_seek($query_id);
+            $row = $result->fetch_array(MYSQLI_ASSOC);
+            $ret['sentences'][] = [
+                "id" => $row['id'],
+                "tokens" => hssh_getTokens($row['content']),
+                "annotated" => $row['annotations'] ? true : false
+            ];
+        }
+        break;
+
+    case "saveGame":
+        checkStudentLogin();
+        $RowTask = checkTask();
+        $data = $RowTask['data'];
+        if (!$_REQUEST['save_game']) {
+            dieWithError("Missing variable save_game");
+        }
+
+        if (!$data['type_info']['save_game']) {
+            $data['type_info']['save_game'] = [];
+        }
+        $data['type_info']['save_game'][$_SESSION['StudentLogin']] = $_REQUEST['save_game'];
+
+        $dataJson = addslashes(json_encode($data));
+        $query = "UPDATE tasks SET data = '$dataJson' WHERE id = '${RowTask['id']}'";
+        $result = $mysqli->query($query);
+        if (!$result) {
+            dieWithError($mysqli->error);
+        }
         break;
 }

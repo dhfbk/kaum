@@ -5,16 +5,8 @@ if (!$TaskID) {
 }
 
 /*
-    Constants: RC_URL
-    Variables: $TaskID, $Info (editable), $rcPassword
+    Variables: $TaskID, $Info (editable)
 */
-
-\ATDev\RocketChat\Chat::setUrl(RC_URL);
-$result = \ATDev\RocketChat\Chat::login("admin", $rcPassword);
-if (!$result) {
-    $error = \ATDev\RocketChat\Chat::getError();
-    dieWithError($error);
-}
 
 // $ret['log'] = [];
 $group = null;

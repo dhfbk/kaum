@@ -125,6 +125,12 @@ function checkLogin() {
     }
 }
 
+function checkStudentLogin() {
+    if (!isset($_SESSION['StudentLogin']) || !$_SESSION['StudentLogin']) {
+        dieWithError("User not logged in", 401);
+    }
+}
+
 function checkAdmin() {
     if (!isAdmin()) {
         dieWithError("Only admin can do that", 401);
@@ -152,17 +158,35 @@ function getTasks($project_id, $getStudents = false) {
     return $tasks;
 }
 
-function checkTask($id, $userID = 0, $projectID = 0) {
-    $Row = find("tasks", $id, "Unable to find task");
-    if (isAdmin()) {
-        $Row['project_info'] = find("projects", $Row['project_id'], "Unable to find project");
-        return $Row;
+function checkTask($id = 0, $userID = 0, $projectID = 0) {
+    if (!$userID) {
+        if ($_SESSION['Login']) {
+            $userID = $_SESSION['Login'];
+        }
+        else {
+            $userID = $_SESSION['StudentLogin'];
+        }
     }
 
-    if (!$userID) {
-        $userID = $_SESSION['Login'];
+    if (!$id) {
+        if (isAdmin()) {
+            dieWithError("Unable to get task ID (admin)");
+        }
+        $RowUser = find("users", $userID, "Unable to find user");
+        if (!$RowUser['task']) {
+            dieWithError("Unable to get task ID");
+        }
+        $Row = find("tasks", $RowUser['task'], "Unable to find task");
     }
-    $RowUser = find("users", $userID, "Unable to find user");
+    else {
+        $Row = find("tasks", $id, "Unable to find task");
+        if (isAdmin()) {
+            $Row['project_info'] = find("projects", $Row['project_id'], "Unable to find project");
+            return $Row;
+        }
+        $RowUser = find("users", $userID, "Unable to find user");
+    }
+
     if ($RowUser['data']['disabled']) {
         dieWithError("User is disabled");
     }
@@ -179,6 +203,7 @@ function checkTask($id, $userID = 0, $projectID = 0) {
     }
     $RowProject = checkProjectAvailability($Row['project_id']);
     $Row['project_info'] = $RowProject;
+    $Row['user_info'] = $RowUser;
 
     return $Row;
 }
@@ -224,7 +249,12 @@ function checkProject($id, $userID = 0) {
     }
 
     if (!$userID) {
-        $userID = $_SESSION['Login'];
+        if ($_SESSION['Login']) {
+            $userID = $_SESSION['Login'];
+        }
+        else {
+            $userID = $_SESSION['StudentLogin'];
+        }
     }
     $RowUser = find("users", $userID, "Unable to find user");
     if ($RowUser['project'] != $id) {

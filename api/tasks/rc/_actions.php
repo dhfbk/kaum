@@ -6,16 +6,12 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
-\ATDev\RocketChat\Chat::setUrl(RC_URL);
-$result = \ATDev\RocketChat\Chat::login("admin", $rcPassword);
-if (!$result) {
-    $error = \ATDev\RocketChat\Chat::getError();
-    dieWithError($error);
-}
-
 switch ($InputData['sub']) {
     case "chat":
         $Row = checkTask($_REQUEST['id'], 0, $_REQUEST['project_id']);
+        if (!$Row['closed'] && !isAdmin()) {
+            dieWithError("Only admins can read messages in running tasks", 401);
+        }
         $channelID = $Row['data']['type_info']['channel_id'];
 
         $ret['messages'] = [];
@@ -108,8 +104,8 @@ switch ($InputData['sub']) {
             break;
         }
 
-        if (!$TaskData['sos_info']) {
-            $TaskData['sos_info'] = [];
+        if (!$TaskData['type_info']['sos_info']) {
+            $TaskData['type_info']['sos_info'] = [];
         }
 
         $RoomID = $TaskData['type_info']['channel_id'];
@@ -134,7 +130,7 @@ switch ($InputData['sub']) {
 
         }
 
-        if (!count($TaskData['sos_info'])) {
+        if (!count($TaskData['type_info']['sos_info'])) {
             $message = new \ATDev\RocketChat\Messages\Message();
             $message->setRoomId($RoomID);
             $message->setEmoji(":sos:");
@@ -148,7 +144,7 @@ switch ($InputData['sub']) {
         $sos_info['roomname'] = $_REQUEST['roomname'];
         $sos_info['datetime'] = date("r");
 
-        $TaskData['sos_info'][] = $sos_info;
+        $TaskData['type_info']['sos_info'][] = $sos_info;
 
         $dataJson = addslashes(json_encode($TaskData));
         $query = "UPDATE tasks SET data = '$dataJson' WHERE id = '{$RowUser['task']}'";

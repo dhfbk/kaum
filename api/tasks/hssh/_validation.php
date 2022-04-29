@@ -1,12 +1,16 @@
 <?php
 
+if (!$RowProject) {
+    exit();
+}
+
 validate($Info['type_info'], [
     'annotations' => 'required|max:' . $Info['students'],
 ]);
 
 if (!$CheckOnly) {
     $Info['type_info']['added_datasets'] = [];
-    $datasets = hssh_listDatasets($projectInfo['project_id']);
+    $datasets = hssh_listDatasets($RowProject['id']);
     foreach (['ch', 'gr'] as $type) {
 
         // File uploaded

@@ -6,13 +6,6 @@ if (!$ProjectID) {
 
 $ret['log'] = [];
 
-\ATDev\RocketChat\Chat::setUrl(RC_URL);
-$result = \ATDev\RocketChat\Chat::login("admin", $rcPassword);
-if (!$result) {
-    $error = \ATDev\RocketChat\Chat::getError();
-    dieWithError($error);
-}
-
 $query = "SELECT * FROM users
     WHERE project = '{$ProjectID}'
         AND educator = '1'

@@ -6,13 +6,6 @@ if (!$Users) {
 
 $ret['log'] = [];
 
-\ATDev\RocketChat\Chat::setUrl(RC_URL);
-$result = \ATDev\RocketChat\Chat::login("admin", $rcPassword);
-if (!$result) {
-    $error = \ATDev\RocketChat\Chat::getError();
-    dieWithError($error);
-}
-
 foreach ($Users as $row) {
     $user = new \ATDev\RocketChat\Users\User();
     $user->setName($row['username']);
