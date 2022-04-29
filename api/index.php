@@ -59,13 +59,14 @@ $Action = isset($_REQUEST['action']) ? $_REQUEST['action'] : "";
 $CheckOnly = isset($_REQUEST['check_only']) && $_REQUEST['check_only'] ? true : false;
 $Options = $_SESSION['Options'];
 
+$ret = [];
+$ret['result'] = "OK";
+
 $TaskTypes = loadSimpleTsv($Options['task_types']);
 foreach ($TaskTypes as $index => $taskName) {
     @include("tasks/" . $index . "/_common.php");
 }
 
-$ret = [];
-$ret['result'] = "OK";
 // $ret = $Options;
 
 // $pwList = explode("\n", $Options['nouns_for_passwords']);
@@ -88,16 +89,18 @@ switch ($Action) {
         if (!$result->num_rows) {
             dieWithError("User " . $username . " does not exist", 401);
         }
-        $row = $result->fetch_array(MYSQLI_ASSOC);
-        if ($row['password'] != $password) {
+        $RowUser = $result->fetch_array(MYSQLI_ASSOC);
+        if ($RowUser['password'] != $password) {
             dieWithError("Invalid password", 401);
         }
-        checkProject($row['project'], $row['id']);
-        checkTaskAvailability($row['task']);
-        $_SESSION['Admin'] = false;
-        $_SESSION['StudentLogin'] = $row['id'];
+        $RowProject = checkProject($RowUser['project'], $RowUser['id']);
+        $RowTask = checkTaskAvailability($RowUser['task']);
 
-        @include("tasks/" . $InputData['type'] . "/_login.php");
+        $_SESSION['Admin'] = false;
+        $_SESSION['Login'] = 0;
+        $_SESSION['StudentLogin'] = $RowUser['id'];
+
+        @include("tasks/" . $RowTask['tool'] . "/_login.php");
 
         $ret['session_id'] = session_id();
         break;
@@ -268,18 +271,6 @@ switch ($Action) {
         exit();
         break;
 
-    case "taskToggleAvailability":
-        $RowTask = checkTask($_REQUEST['id']);
-        $query = "UPDATE tasks SET disabled = NOT disabled WHERE id = '${RowTask['id']}'";
-        $result = $mysqli->query($query);
-        if (!$result) {
-            dieWithError($mysqli->error);
-        }
-
-        $RowTask = checkTask($_REQUEST['id']);
-        @include("tasks/" . $RowTask['tool'] . "/_taskToggleAvailability.php");
-        break;
-
     case "projectToggleAvailability":
         checkAdmin();
         $Row = find("projects", $_REQUEST['id'], "Unable to find project");
@@ -391,6 +382,33 @@ switch ($Action) {
         $ret['types'] = $TaskTypes;
         break;
 
+    case "taskToggleAvailability":
+        $RowTask = checkTask($_REQUEST['id']);
+        $query = "UPDATE tasks SET disabled = NOT disabled WHERE id = '${RowTask['id']}'";
+        $result = $mysqli->query($query);
+        if (!$result) {
+            dieWithError($mysqli->error);
+        }
+
+        $RowTask = checkTask($_REQUEST['id']);
+        @include("tasks/" . $RowTask['tool'] . "/_taskToggleAvailability.php");
+        break;
+
+    case "closeTask":
+        $RowTask = checkTask($_REQUEST['id']);
+
+        // This is important!
+        if (!$RowTask['disabled']) {
+            dieWithError("Only disabled tasks can be closed");
+        }
+
+        $query = "UPDATE tasks SET closed = '1' WHERE id = '${RowTask['id']}'";
+        $result = $mysqli->query($query);
+        if (!$result) {
+            dieWithError($mysqli->error);
+        }
+        break;
+
     case "task":
         $InputData = $_REQUEST;
         validate($InputData, [
@@ -402,6 +420,8 @@ switch ($Action) {
         switch ($InputData['sub']) {
             case "changeUserName":
                 $Username = addslashes($_REQUEST['pk']);
+                // $ret['username'] = $Username;
+                // break;
                 $query = "SELECT * FROM users
                     WHERE username = '{$Username}' AND deleted = '0'";
                 $result = $mysqli->query($query);
@@ -459,6 +479,7 @@ switch ($Action) {
                     $row['data'] = json_decode($row['data'], true);
                     $ret['info']['students'][] = $row;
                 }
+                @include("tasks/" . $Row['tool'] . "/_info.php");
                 // $ret['project_info'] = checkProject($)
                 break;
 
@@ -470,8 +491,8 @@ switch ($Action) {
                     'type' => 'required|in:' . implode(",", array_keys($TaskTypes)),
                 ]);
 
-                $projectInfo = checkProject($_REQUEST['project_id']);
-                $ProjectID = $projectInfo['id'];
+                $RowProject = checkProject($_REQUEST['project_id']);
+                $ProjectID = $RowProject['id'];
                 $Info = json_decode($InputData['info'], true);
                 validate($Info, [
                     'name' => 'required|min:' . $Options['task_name_minlength'],
@@ -538,6 +559,8 @@ switch ($Action) {
                 //     $ret['co'] = true;
                 // }
 
+                //$Info['orig_info'] = $Info['type_info'];
+
                 @include("tasks/" . $InputData['type'] . "/_validation.php");
                 if ($CheckOnly) {
                     break;
@@ -596,10 +619,28 @@ switch ($Action) {
                 break;
 
             default:
+                validate($InputData, [
+                    'type' => 'required|in:' . implode(",", array_keys($TaskTypes)),
+                ]);
                 @include("tasks/" . $InputData['type'] . "/_actions.php");
                 break;
         }
 
+        break;
+
+    case "resetAll":
+        checkAdmin();
+        $Reset = true;
+
+        foreach ($TaskTypes as $index => $taskName) {
+            @include("tasks/" . $index . "/_resetAll.php");
+        }
+        foreach (["projects", "tasks", "users"] as $table) {
+            $table = addslashes($table);
+            $query = "TRUNCATE `{$table}`";
+            $mysqli->query($query);
+        }
+        
         break;
 
     default:

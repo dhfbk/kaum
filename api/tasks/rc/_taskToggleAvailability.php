@@ -4,13 +4,6 @@ if (!$RowTask) {
     exit();
 }
 
-\ATDev\RocketChat\Chat::setUrl(RC_URL);
-$result = \ATDev\RocketChat\Chat::login("admin", $rcPassword);
-if (!$result) {
-    $error = \ATDev\RocketChat\Chat::getError();
-    dieWithError($error);
-}
-
 $ret['users'] = [];
 $ret['rc_users'] = [];
 
