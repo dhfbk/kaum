@@ -2,7 +2,7 @@
     <button :class="classes" type="button"
             class="me-3 btn btn-sm" :title="text" :disabled="props.disabled">
         <i class="bi" :class="'bi-' + props.icon"></i>
-        <span class="d-none d-md-inline">&nbsp;{{ text }}</span>
+        <span class="d-none d-lg-inline">&nbsp;{{ text }}</span>
     </button>
 </template>
 

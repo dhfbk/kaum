@@ -6,42 +6,47 @@
             </h1>
         </div>
         <div class="col-md-3 text-end">
-            <button class="btn btn-primary btn-sm" @click="this.$router.push('/projects/new')">
+            <button class="btn btn-primary btn-sm" @click="addProject()">
                 <i class="bi bi-file-earmark-plus"></i> Add project
             </button>
         </div>
     </div>
-    <p v-if="projectList.length == 0">
-        No projects yet
+    <p v-if="basicLoading">
+        <LoadingSpinner/>
+        Loading
     </p>
-    <table v-else class="table">
-        <thead>
-        <tr>
-            <th scope="col">#</th>
-            <th scope="col">Name</th>
-            <th scope="col">Educators</th>
-            <th scope="col">Status</th>
-            <th scope="col">Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr v-for="p in projectList" :key="p.id" class="align-middle">
-            <th scope="row">{{ p.id }}</th>
-            <td>{{ p.name }}</td>
-            <td>{{ p.data.educators }}</td>
-            <td>
-                <span class="badge bg-warning" v-if="!p.confirmed">Unconfirmed</span>
-                <span class="badge bg-success" v-else-if="!p.disabled">Active</span>
-                <span class="badge bg-danger" v-else>Disabled</span>
-            </td>
-            <td>
+    <template v-else>
+        <p v-if="projectList.length == 0">
+            No projects yet
+        </p>
+        <table v-else class="table">
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Name</th>
+                <th scope="col">Educators</th>
+                <th scope="col">Status</th>
+                <th scope="col">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="p in projectList" :key="p.id" class="align-middle">
+                <th scope="row">{{ p.id }}</th>
+                <td>{{ p.name }}</td>
+                <td>{{ p.data.educators }}</td>
+                <td>
+                    <span class="badge bg-warning" v-if="!p.confirmed">Unconfirmed</span>
+                    <span class="badge bg-success" v-else-if="!p.disabled">Active</span>
+                    <span class="badge bg-danger" v-else>Disabled</span>
+                </td>
+                <td>
                 <span v-if="!p.confirmed">
                     <PicButton @click="confirmProject(p.id)"
                                text="Confirm" color="info" icon="check-circle" :disabled="projectLoading.has(p.id)"/>
                     <PicButton @click="getPasswords(p.id)"
                                text="Download passwords" color="success" icon="key"/>
                 </span>
-                <span v-else>
+                    <span v-else>
                     <PicButton v-if="!p.disabled" @click="enterProject(p.id)"
                                text="Manage" color="success" icon="box-arrow-in-right"/>
                     <PicButton v-if="!p.disabled" @click="toggleAvailability(p.id)"
@@ -50,29 +55,36 @@
                                text="Enable" color="warning" icon="brightness-high"
                                :disabled="projectLoading.has(p.id)"/>
                 </span>
-                <PicButton text="Delete" color="danger" icon="trash"/>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+                    <PicButton text="Delete" color="danger" icon="trash"/>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </template>
 </template>
 
 <script setup>
 import {inject, onMounted, ref} from 'vue'
 import {useRouter} from 'vue-router'
-import PicButton from "@/components/PicButton";
+import PicButton from "@/components/objects/PicButton";
+import LoadingSpinner from "@/components/objects/LoadingSpinner";
 
 const router = useRouter();
 
 // @ is an alias to /src
 // import HelloWorld from '@/components/HelloWorld.vue'
 
-const axios = inject('axios')
+const axios = inject('axios');
 const updateAxiosParams = inject('updateAxiosParams');
 const showModalWindow = inject('showModalWindow');
 
 const projectList = ref([]);
 const projectLoading = ref(new Set());
+const basicLoading = ref(true);
+
+function addProject() {
+    router.push('/projects/new');
+}
 
 function getPasswords(id) {
     let params = {"action": "projectPasswords", "id": id, ...updateAxiosParams()};
@@ -81,7 +93,7 @@ function getPasswords(id) {
 }
 
 function enterProject(id) {
-    router.replace({path: "/project/" + id});
+    router.push({path: "/project/" + id});
 }
 
 function confirmProject(id) {
@@ -111,6 +123,7 @@ function projectAction(id, action) {
 }
 
 function updateProjects() {
+    basicLoading.value = true;
     axios.get("?", {"params": {"action": "projectList", ...updateAxiosParams()}})
         .then((response) => {
             projectList.value = response.data.records;
@@ -124,8 +137,8 @@ function updateProjects() {
             //   modalMessage.value = reason.response.statusText;
             // }
         })
-        .then(() => {
-            // mainLoaded.value = true;
+        .finally(() => {
+            basicLoading.value = false;
         });
 }
 

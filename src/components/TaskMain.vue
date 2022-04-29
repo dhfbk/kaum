@@ -1,5 +1,8 @@
 <template>
-    <p v-if="basicLoading">Loading</p>
+    <p v-if="basicLoading">
+        <LoadingSpinner/>
+        Loading
+    </p>
     <template v-else>
         <h1>
             Task: {{ taskInfo.name }}
@@ -56,6 +59,7 @@
 // import {useRoute} from "vue-router";
 import {defineAsyncComponent, shallowRef, ref, onMounted, defineProps, inject, nextTick} from "vue";
 import {useRoute, useRouter} from "vue-router";
+import LoadingSpinner from "@/components/objects/LoadingSpinner";
 // import DarkEditable from '@/dark-editable'
 const DarkEditable = require('@/dark-editable.js').default;
 // const pippo = new DarkEditable(document.getElementById("ciao"));
@@ -120,7 +124,10 @@ async function updateTask() {
                     type: 'text',
                     pk: d.dataset.username,
                     url: axios.defaults.baseURL + "?" + u,
-                    ajaxOptions: {dataType: "json"},
+                    ajaxOptions: {
+                        method: "POST",
+                        dataType: "json"
+                    },
                     error: function (response) {
                         return response.json().then(function (data) {
                             showModalWindow(data.error);

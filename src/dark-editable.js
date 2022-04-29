@@ -1,5 +1,32 @@
 import {Popover} from "bootstrap";
 
+/*
+
+Taken from: https://github.com/DarKsandr/dark-editable
+
+MIT License
+
+Copyright (c) 2021 DarKsandr
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+ */
+
 export default class DarkEditable {
     constructor(element, options = {}) {
         this._element = {element: null, form: null, load: null, buttons: {success: null, cancel: null}}
@@ -102,15 +129,15 @@ export default class DarkEditable {
                     });
                 }
                 break;
-            case "date":
-            case "datetime":
-                if (this.value == "") {
-                    this.element.innerHTML = this.emptytext;
-                } else {
-                    this.element.innerHTML = moment(this.value).format(this.viewformat);
-                    empty = false;
-                }
-                break;
+            // case "date":
+            // case "datetime":
+            //     if (this.value == "") {
+            //         this.element.innerHTML = this.emptytext;
+            //     } else {
+            //         this.element.innerHTML = moment(this.value).format(this.viewformat);
+            //         empty = false;
+            //     }
+            //     break;
         }
         if (empty) {
             this.element.classList.add(empty_class);
@@ -126,7 +153,7 @@ export default class DarkEditable {
             const target = e.target;
             if (target === this.popover.tip || target == this.element) return;
             let current = target;
-            while (current = current.parentNode) {
+            while ((current = current.parentNode)) {
                 if (current === this.popover.tip) return;
             }
             this.popover.hide();
@@ -333,17 +360,18 @@ export default class DarkEditable {
         const btn_success = this.createButton();
         btn_success.type = "submit";
         btn_success.classList.add("btn-success");
-        btn_success.innerHTML = "✔";
+        btn_success.innerHTML = '<i class="bi bi-check-circle-fill"></i>';
         return btn_success;
     }
 
     createButtonCancel() {
         const btn_cancel = this.createButton();
         btn_cancel.classList.add("btn-danger");
-        const div = document.createElement("div");
-        div.innerHTML = "✖";
+        btn_cancel.innerHTML = '<i class="bi bi-x-circle-fill"></i>';
+        // const div = document.createElement("div");
+        // div.innerHTML = "✖";
         // div.style.transform = `rotate(45deg)`
-        btn_cancel.append(div);
+        // btn_cancel.append(div);
         btn_cancel.addEventListener("click", () => {
             this.popover.hide();
         });
@@ -362,6 +390,7 @@ export default class DarkEditable {
         form.append("value", new_value);
         const option = {};
         option.method = this.ajaxOptions.method;
+        // option.mode = "no-cors";
         if (option.method == "POST") {
             option.body = form;
         } else {
@@ -371,11 +400,11 @@ export default class DarkEditable {
         return response;
     }
 
-    success(response, newValue) {
+    success() {
 
     }
 
-    error(response, newValue) {
+    error() {
 
     }
 

@@ -2,7 +2,7 @@
     <h1>
         {{ title }}
     </h1>
-    <ProjectForm :valuesProp="values" @submit="submit"/>
+    <ProjectForm :valuesProp="values" @submit="submit" :buttonDisabled="buttonDisabled"/>
 </template>
 
 <script setup>
@@ -28,8 +28,10 @@ const values = ref({
 const title = ref("");
 
 const showModalWindow = inject('showModalWindow');
+const buttonDisabled = ref(false);
 
 function submit(v) {
+    buttonDisabled.value = true;
     axios.post("?", {"action": "projectAdd", ...updateAxiosParams(), info: v})
         .then(() => {
             showModalWindow("Project created successfully");
@@ -45,6 +47,7 @@ function submit(v) {
             // }
         })
         .then(() => {
+            buttonDisabled.value = false;
             // mainLoaded.value = true;
         });
 }

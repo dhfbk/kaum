@@ -33,7 +33,7 @@
                           </div>-->
             </div>
             <div class="text-end mt-md-5">
-                <button class="btn btn-primary btn-lg" type="submit">Submit</button>
+                <button :disabled="buttonDisabled" class="btn btn-primary btn-lg" type="submit">Submit</button>
             </div>
         </form>
     </div>
@@ -49,9 +49,13 @@ const emit = defineEmits(['submit']);
 const props = defineProps({
     valuesProp: {
         type: Object
+    },
+    buttonDisabled: {
+        type: Boolean
     }
 });
 const values = ref(props.valuesProp);
+// const buttonDisabled = ref(props.buttonDisabled);
 
 function submit(event) {
     let {srcElement: form} = event;

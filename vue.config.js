@@ -1,8 +1,20 @@
 const path = require('path');
 const {defineConfig} = require('@vue/cli-service')
+// const webpack = require("webpack");
+// const dotenv = require('dotenv').config({ path: __dirname + '/.env' })
 
 module.exports = defineConfig({
     transpileDependencies: true,
+    // configureWebpack: {
+    //     resolve: {
+    //         fallback: {
+    //             fs: false,
+    //             os: false,
+    //             util: false,
+    //             path: false
+    //         }
+    //     }
+    // },
     css: {
         loaderOptions: {
             sass: {

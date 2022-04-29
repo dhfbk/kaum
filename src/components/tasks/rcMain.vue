@@ -4,9 +4,9 @@
             <h2>
                 SOS calls
             </h2>
-            <p v-if="!values.data.sos_info">No SOS calls</p>
+            <p v-if="!values.data.type_info.sos_info">No SOS calls.</p>
             <ul v-else>
-                <li v-for="(info, i) in values.data.sos_info" :key="i">
+                <li v-for="(info, i) in values.data.type_info.sos_info" :key="i">
                     {{ getGoodDate(info.datetime) }} from <code>{{ info.username }}</code>
                 </li>
             </ul>
@@ -19,7 +19,7 @@
             </h2>
             <p v-if="!rcLoaded">Loading...</p>
             <template v-else>
-                <p v-if="messages.length === 0">No messages</p>
+                <p v-if="messages.length === 0">{{ noMessages }}</p>
                 <ul v-else class="list-group">
                     <li v-for="(message, i) in messages" :key="i" class="list-group-item">
                         <div class="row">
@@ -40,7 +40,8 @@
 <script setup>
 
 import {inject, defineProps, onMounted, ref} from "vue";
-import {useRoute} from "vue-router";
+import {useStore} from "vuex";
+// import {useRoute} from "vue-router";
 
 const props = defineProps({
     "values": {
@@ -48,11 +49,13 @@ const props = defineProps({
     }
 });
 const values = ref(props.values);
-const route = useRoute();
+// const route = useRoute();
 const axios = inject('axios');
 const updateAxiosParams = inject('updateAxiosParams');
 const messages = ref([]);
 const rcLoaded = ref(false);
+const store = useStore();
+const noMessages = ref("No messages");
 
 function getGoodDate(value) {
     const date = new Date(Date.parse(value));
@@ -60,24 +63,27 @@ function getGoodDate(value) {
 }
 
 onMounted(async function () {
-    console.log(route);
-    axios.get("?", {
-        "params": {
-            "action": "task",
-            "type": "rc",
-            "sub": "chat",
-            "project_id": values.value.project_id,
-            "id": values.value.id,
-            ...updateAxiosParams()
-        }
-    })
-        .then(async (response) => {
-            console.log(response.data);
-            messages.value = response.data.messages;
+    if (store.state.loggedAdmin || values.value.closed) {
+        axios.get("?", {
+            "params": {
+                "action": "task",
+                "type": "rc",
+                "sub": "chat",
+                "project_id": values.value.project_id,
+                "id": values.value.id,
+                ...updateAxiosParams()
+            }
         })
-        .then(() => {
-            rcLoaded.value = true;
-        });
+            .then(async (response) => {
+                messages.value = response.data.messages;
+            })
+            .finally(() => {
+                rcLoaded.value = true;
+            });
+    } else {
+        noMessages.value = "Task must be closed to get chat texts.";
+        rcLoaded.value = true;
+    }
 })
 
 </script>

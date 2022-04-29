@@ -1,5 +1,8 @@
 <template>
-    <p v-if="basicLoading">Loading</p>
+    <p v-if="basicLoading">
+        <LoadingSpinner/>
+        Loading
+    </p>
     <template v-else>
         <h1>{{ projectInfo.name }}</h1>
         <template v-if="store.state.loggedAdmin">
@@ -68,15 +71,22 @@
                 <td>{{ e.tool }}</td>
                 <td>{{ e.name }}</td>
                 <td>{{ e.students }}</td>
-                <td>{{ e.disabled ? "Disabled" : "Enabled" }}</td>
+                <td v-if="e.closed"><span class="badge bg-dark">Closed</span></td>
+                <td v-else-if="e.disabled"><span class="badge bg-danger">Disabled</span></td>
+                <td v-else><span class="badge bg-success">Enabled</span></td>
                 <td>
-                    <PicButton v-if="!e.disabled" @click="toggleTask(e.id)" text="Disable" color="warning"
-                               icon="x-circle" :disabled="taskLoading.has(e.id)"/>
-                    <PicButton v-else @click="toggleTask(e.id)" text="Enable" color="warning" icon="brightness-high"
-                               :disabled="taskLoading.has(e.id)"/>
-
                     <PicButton @click="enterTask(e.id)" text="Manage" color="success" icon="box-arrow-in-right"/>
-                    <PicButton @click="getUsersPasswords(e.id)" text="User passwords" color="info" icon="key"/>
+                    <PicButton @click="addTask(e.id)" text="Clone" color="secondary" icon="file-earmark-break"/>
+                    <template v-if="!e.closed">
+                        <PicButton v-if="!e.disabled" @click="toggleTask(e.id)" text="Disable" color="warning"
+                                   icon="x-circle" :disabled="taskLoading.has(e.id)"/>
+                        <PicButton v-else @click="toggleTask(e.id)" text="Enable" color="warning" icon="brightness-high"
+                                   :disabled="taskLoading.has(e.id)"/>
+
+                        <PicButton @click="getUsersPasswords(e.id)" text="User passwords" color="info" icon="key"/>
+                        <PicButton v-if="e.disabled" :disabled="taskLoading.has(e.id)" @click="closeTask(e.id)"
+                                   text="Close" color="dark" icon="door-closed-fill"/>
+                    </template>
                 </td>
             </tr>
             </tbody>
@@ -88,8 +98,9 @@
 import {defineProps, ref, defineEmits, onMounted, inject} from "vue";
 import {useStore} from "vuex";
 
-import PicButton from "@/components/PicButton";
+import PicButton from "@/components/objects/PicButton";
 import {useRoute, useRouter} from "vue-router";
+import LoadingSpinner from "@/components/objects/LoadingSpinner";
 
 const showModalWindow = inject('showModalWindow');
 const axios = inject('axios');
@@ -113,7 +124,6 @@ const router = useRouter();
 const route = useRoute();
 
 function getUsersPasswords(taskID) {
-    console.log("Passwords: " + taskID);
     let params = {
         "action": "taskPasswords",
         "project_id": id.value,
@@ -126,12 +136,11 @@ function getUsersPasswords(taskID) {
 
 function enterTask(taskID) {
     router.push('/project/' + route.params.id + '/' + taskID)
-    console.log(taskID);
 }
 
-// function toggleTask(taskID) {
-//     console.log("Toggle: " + taskID);
-// }
+function closeTask(id) {
+    taskAction(id, "closeTask");
+}
 
 function toggleTask(id) {
     taskAction(id, "taskToggleAvailability");
@@ -152,8 +161,9 @@ function taskAction(id, action) {
         });
 
 }
-function addTask() {
-    emit("addTask");
+
+function addTask(cloneID) {
+    emit("addTask", cloneID);
 }
 
 function updateProject() {

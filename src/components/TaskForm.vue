@@ -1,7 +1,12 @@
 <template>
-    <h1>{{ props.title }}</h1>
-    <p>{{ values }}</p>
-
+    <h1>
+        {{ props.title }}
+    </h1>
+    <p v-if="cloneText" class="text-muted">
+        <LoadingSpinner v-show="loadingClone"/>
+        <em>{{ cloneText }}</em>
+    </p>
+    <!--    <p>{{ values }}</p>-->
     <div class="my-3">
         <form id="taskForm" class="needs-validation" novalidate @submit.stop.prevent="submit">
             <div class="card mb-3">
@@ -156,7 +161,7 @@
                 </div>
                 <div class="col-auto">
                     <button v-if="disableSubmit" class="btn btn-danger btn-lg ms-3" @click="cancel()">Cancel</button>
-                    <button :disabled="disableSubmit" class="btn btn-primary btn-lg ms-3" type="submit">Submit</button>
+                    <button :disabled="disableSubmit || loadingClone" class="btn btn-primary btn-lg ms-3" type="submit">Submit</button>
                     <button :disabled="disableSubmit" class="btn btn-warning btn-lg ms-3" @click.prevent="back()">Back
                     </button>
                 </div>
@@ -166,15 +171,18 @@
 </template>
 
 <script setup>
-import {defineEmits, defineProps, ref} from 'vue'
+import {onMounted, defineEmits, defineProps, ref, inject} from 'vue'
 import {useStore} from 'vuex'
-// eslint-disable-next-line
-// import {DateRangePicker, Datepicker} from 'vanillajs-datepicker';
 import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
+import {useRoute} from "vue-router";
+import LoadingSpinner from "@/components/objects/LoadingSpinner";
 
 const store = useStore();
-// const axios = inject('axios');
+const route = useRoute();
+const axios = inject('axios');
+const updateAxiosParams = inject("updateAxiosParams");
+const cloneText = ref("");
 
 const emit = defineEmits(['submit', 'cancel', 'back']);
 const props = defineProps({
@@ -198,11 +206,7 @@ const props = defineProps({
     }
 });
 const values = ref(props.valuesProp);
-// const title = ref(props.title);
-// const disableSubmit = ref(props.disableSubmit);
-// const typeOptions = ref({});
-// const components = shallowRef({});
-// const myTest = ref("18/04/2022");
+const loadingClone = ref(false);
 
 const split = (string, part) => {
     if (part == 0) {
@@ -231,7 +235,39 @@ for (let i = 0; i < 24; i++) {
 }
 timeSpans = ref(timeSpans);
 
-// console.log(timeSpans);
+function copyValuesForClonation(o1, o2, tiLabels) {
+    o1.name = o2.name;
+    o1.type = o2.type;
+    o1.students = o2.students;
+    o1.passwords = o2.passwords;
+    o1.time = o2.time;
+
+    for (let l of tiLabels) {
+        o1.type_info[l] = o2.type_info[l];
+    }
+}
+
+onMounted(async function () {
+    if (route.params.cloneID) {
+        cloneText.value = "Getting data to clone...";
+        loadingClone.value = true;
+        axios.get("?", {
+            "params": {
+                "action": "task",
+                "sub": "info",
+                "project_id": route.params.id,
+                "id": route.params.cloneID, ...updateAxiosParams()
+            }
+        })
+            .then(async (response) => {
+                copyValuesForClonation(values.value, response.data.info.data, response.data.clone_values);
+            })
+            .finally(function() {
+                cloneText.value = "Clone from task " + route.params.cloneID;
+                loadingClone.value = false;
+            });
+    }
+});
 
 function back() {
     emit('back');

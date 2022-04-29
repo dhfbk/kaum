@@ -17,7 +17,7 @@
     </div>
 
     <ModalWindow :show="showModal" :message="modalMessage" id="loginModalWindow" @close="showModal = false">
-        <template v-slot:title>Error</template>
+        <template v-slot:title>Message</template>
         <template v-slot:btn-text>Ok</template>
     </ModalWindow>
 
@@ -36,7 +36,7 @@ import {useStore} from 'vuex'
 
 // @ is an alias to /src
 import LoginForm from '@/components/LoginForm.vue'
-import ModalWindow from '@/components/ModalWindow.vue'
+import ModalWindow from '@/components/objects/ModalWindow.vue'
 import NavBar from '@/components/NavBar.vue'
 
 const showModal = ref(false);
@@ -65,7 +65,7 @@ async function loadUserInfo() {
         })
         .catch((reason) => {
             store.commit('logout');
-            if (reason.response.status !== 401) {
+            if (reason.response && reason.response.status !== 401) {
                 showModal.value = true;
                 modalMessage.value = reason.response.statusText;
             }
