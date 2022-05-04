@@ -6,7 +6,7 @@
         <LoadingSpinner v-show="loadingClone"/>
         <em>{{ cloneText }}</em>
     </p>
-    <!--    <p>{{ values }}</p>-->
+    <p>{{ values }}</p>
     <div class="my-3">
         <form id="taskForm" class="needs-validation" novalidate @submit.stop.prevent="submit">
             <div class="card mb-3">
@@ -161,7 +161,9 @@
                 </div>
                 <div class="col-auto">
                     <button v-if="disableSubmit" class="btn btn-danger btn-lg ms-3" @click="cancel()">Cancel</button>
-                    <button :disabled="disableSubmit || loadingClone" class="btn btn-primary btn-lg ms-3" type="submit">Submit</button>
+                    <button :disabled="disableSubmit || loadingClone" class="btn btn-primary btn-lg ms-3" type="submit">
+                        Submit
+                    </button>
                     <button :disabled="disableSubmit" class="btn btn-warning btn-lg ms-3" @click.prevent="back()">Back
                     </button>
                 </div>
@@ -262,7 +264,7 @@ onMounted(async function () {
             .then(async (response) => {
                 copyValuesForClonation(values.value, response.data.info.data, response.data.clone_values);
             })
-            .finally(function() {
+            .finally(function () {
                 cloneText.value = "Clone from task " + route.params.cloneID;
                 loadingClone.value = false;
             });

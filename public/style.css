@@ -1,3 +1,14 @@
 .nobr {
     white-space:nowrap;
 }
+
+.dark-enable::before {
+    content: "\f4cb";
+    font-family: bootstrap-icons !important;
+    font-style: normal;
+    font-weight: normal !important;
+    font-variant: normal;
+    text-transform: none;
+    color: black;
+    padding-right: 10px;
+}

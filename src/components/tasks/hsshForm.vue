@@ -31,6 +31,14 @@
                 <div class="col" v-if="values.type_info['custom_' + fileType]">
                     <input class="form-control" type="file" @change="handleFileUpload( fileType, $event )" required>
                     <div class="invalid-feedback">You must upload a file.</div>
+
+                    <div class="form-check mt-2">
+                        <input v-model="values.type_info['save_' + fileType]" class="form-check-input" type="checkbox"
+                               :id="'saveFileCheck_' + fileType">
+                        <label class="form-check-label" :for="'saveFileCheck_' + fileType">
+                            Save {{fileTypeString}} dataset for future tasks
+                        </label>
+                    </div>
                 </div>
                 <div class="col" v-else>
                     <div v-if="datasets[fileType] == undefined || datasets[fileType].length == 0">
@@ -93,6 +101,7 @@ for (let t in fileTypes) {
 
 onMounted(async function () {
     for (let t in fileTypes) {
+        values.value['type_info']['save_' + t] = true;
         if (!values.value['type_info']['dataset_' + t]) {
             values.value['type_info']['dataset_' + t] = "";
         }

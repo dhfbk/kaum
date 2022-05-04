@@ -4,7 +4,16 @@
         Loading
     </p>
     <template v-else>
-        <h1>{{ projectInfo.name }}</h1>
+        <div class="row">
+            <div class="col-md-9">
+                <h1>{{ projectInfo.name }}</h1>
+            </div>
+            <div class="col-md-3 text-end" v-if="store.state.loggedAdmin">
+                <button class="btn btn-warning btn-sm" @click="goBack()">
+                    Back to project list
+                </button>
+            </div>
+        </div>
         <template v-if="store.state.loggedAdmin">
             <div class="row mt-5">
                 <div class="col-md-9">
@@ -26,14 +35,34 @@
                 <tr>
                     <th scope="col">#</th>
                     <th scope="col">Username</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">E-mail</th>
+                    <th scope="col">Status</th>
                     <th scope="col">Actions</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr v-for="e in projectInfo.educators" :key="e.id" class="align-middle">
+                <tr v-for="e in projectInfo.educators" :key="updateTotal + '_' + e.id" class="align-middle">
                     <th scope="row">{{ e.id }}</th>
                     <td>{{ e.username }}</td>
-                    <td>Actions</td>
+                    <td><span class="dark-enable" :data-username="e.username" :id="e.username + '_change_name'"
+                        data-title="Edit name">{{
+                            e.name
+                        }}
+                    </span></td>
+                    <td><span class="dark-enable" :data-username="e.username" :id="e.username + '_change_email'"
+                        data-title="Edit e-mail address">{{
+                            e.email
+                        }}
+                    </span></td>
+                    <td v-if="e.disabled"><span class="badge bg-danger">Disabled</span></td>
+                    <td v-else><span class="badge bg-success">Enabled</span></td>
+                    <td>
+                        <PicButton v-if="!e.disabled" @click="toggleUser(e.id)" text="Disable" color="warning"
+                                   icon="x-circle" :disabled="userLoading.has(e.id)"/>
+                        <PicButton v-else @click="toggleUser(e.id)" text="Enable" color="warning" icon="brightness-high"
+                                   :disabled="userLoading.has(e.id)"/>
+                    </td>
                 </tr>
                 </tbody>
             </table>
@@ -95,12 +124,13 @@
 </template>
 
 <script setup>
-import {defineProps, ref, defineEmits, onMounted, inject} from "vue";
+import {defineProps, ref, defineEmits, onMounted, inject, nextTick} from "vue";
 import {useStore} from "vuex";
 
 import PicButton from "@/components/objects/PicButton";
 import {useRoute, useRouter} from "vue-router";
 import LoadingSpinner from "@/components/objects/LoadingSpinner";
+import DarkEditable from "@/dark-editable";
 
 const showModalWindow = inject('showModalWindow');
 const axios = inject('axios');
@@ -119,9 +149,17 @@ const id = ref(props.id);
 const basicLoading = ref(true);
 const projectInfo = ref({});
 const taskLoading = ref(new Set());
+const userLoading = ref(new Set());
+
+// Force reload of dark-editable
+const updateTotal = ref(0);
 
 const router = useRouter();
 const route = useRoute();
+
+function goBack() {
+    router.push('/projects');
+}
 
 function getUsersPasswords(taskID) {
     let params = {
@@ -146,6 +184,21 @@ function toggleTask(id) {
     taskAction(id, "taskToggleAvailability");
 }
 
+function toggleUser(id) {
+    userLoading.value.add(id);
+    axios.post("?", {"action": "userToggleAvailability", id: id, ...updateAxiosParams()})
+        .then(() => {
+            updateProject();
+        })
+        .catch((reason) => {
+            let debugText = reason.response.statusText + " - " + reason.response.data.error;
+            showModalWindow(debugText);
+        })
+        .then(() => {
+            userLoading.value.delete(id);
+        });
+}
+
 function taskAction(id, action) {
     taskLoading.value.add(id);
     axios.post("?", {"action": action, id: id, ...updateAxiosParams()})
@@ -167,17 +220,48 @@ function addTask(cloneID) {
 }
 
 function updateProject() {
+    updateTotal.value++;
     axios.get("?", {
         "params": {
             "action": "projectInfo", "id": id.value, ...updateAxiosParams()
         }
     })
-        .then((response) => {
+        .then(async (response) => {
             basicLoading.value = false;
             projectInfo.value = response.data.info;
+            await nextTick();
+
+            let darkList = document.getElementsByClassName("dark-enable");
+            // console.log(darkList);
+            for (let d of darkList) {
+                const params = {
+                    "action": "task",
+                    "sub": "changeUserName",
+                    ...updateAxiosParams()
+                };
+                const u = new URLSearchParams(params).toString();
+                new DarkEditable(d, {
+                    type: 'text',
+                    pk: d.dataset.username,
+                    url: axios.defaults.baseURL + "?" + u,
+                    ajaxOptions: {
+                        method: "POST",
+                        dataType: "json"
+                    },
+                    error: function (response) {
+                        return response.json().then(function (data) {
+                            showModalWindow(data.error);
+                        });
+                    },
+                    title: d.dataset.title ? d.dataset.title : "Edit data"
+                });
+            }
         })
         .catch((reason) => {
-            let debugText = reason.response.statusText + " - " + reason.response.data.error;
+            let debugText = reason;
+            if (reason.response) {
+                debugText = reason.response.statusText + " - " + reason.response.data.error;
+            }
             showModalWindow(debugText);
         })
         .then(() => {

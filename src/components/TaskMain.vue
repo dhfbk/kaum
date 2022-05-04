@@ -31,15 +31,25 @@
                 <th scope="col">#</th>
                 <th scope="col">Username</th>
                 <th scope="col">Name</th>
+                <th scope="col">Status</th>
                 <th scope="col">Actions</th>
             </tr>
             </thead>
             <tbody>
-            <tr v-for="e in taskInfo.students" :key="e.id" class="align-middle">
+            <tr v-for="e in taskInfo.students" :key="updateTotal + '_' + e.id" class="align-middle">
                 <th scope="row">{{ e.id }}</th>
                 <td>{{ e.username }}</td>
-                <td class="dark-enable" :data-username="e.username">{{ e.data.name }}</td>
-                <td>Actions</td>
+                <td><span class="dark-enable" :data-username="e.username" :id="e.username + '_change_name'" data-title="Edit name">{{
+                        e.data.name
+                    }}</span></td>
+                <td v-if="e.data.disabled"><span class="badge bg-danger">Disabled</span></td>
+                <td v-else><span class="badge bg-success">Enabled</span></td>
+                <td>
+                    <PicButton v-if="!e.data.disabled" @click="toggleUser(e.id)" text="Disable" color="warning"
+                               icon="x-circle" :disabled="userLoading.has(e.id)"/>
+                    <PicButton v-else @click="toggleUser(e.id)" text="Enable" color="warning" icon="brightness-high"
+                               :disabled="userLoading.has(e.id)"/>
+                </td>
             </tr>
             </tbody>
         </table>
@@ -60,10 +70,9 @@
 import {defineAsyncComponent, shallowRef, ref, onMounted, defineProps, inject, nextTick} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import LoadingSpinner from "@/components/objects/LoadingSpinner";
-// import DarkEditable from '@/dark-editable'
+import PicButton from "@/components/objects/PicButton";
+
 const DarkEditable = require('@/dark-editable.js').default;
-// const pippo = new DarkEditable(document.getElementById("ciao"));
-// console.log(pippo);
 
 // new dark.DarkEditable();
 const router = useRouter();
@@ -76,6 +85,11 @@ const component = shallowRef(null);
 const basicLoading = ref(true);
 const taskInfo = ref({});
 
+// Force reload of dark-editable
+const updateTotal = ref(0);
+
+const userLoading = ref(new Set());
+
 const props = defineProps({
     id: {
         type: String
@@ -85,11 +99,28 @@ const props = defineProps({
     }
 });
 
+function toggleUser(id) {
+    userLoading.value.add(id);
+    axios.post("?", {"action": "userToggleAvailability", id: id, ...updateAxiosParams()})
+        .then(() => {
+            updateTask();
+        })
+        .catch((reason) => {
+            let debugText = reason.response.statusText + " - " + reason.response.data.error;
+            showModalWindow(debugText);
+        })
+        .then(() => {
+            userLoading.value.delete(id);
+        });
+}
+
+
 function back() {
     router.push("/project/" + route.params.id);
 }
 
 async function updateTask() {
+    updateTotal.value++;
     axios.get("?", {
         "params": {
             "action": "task", "sub": "info", "project_id": props.id, "id": props.task, ...updateAxiosParams()
@@ -138,7 +169,7 @@ async function updateTask() {
                     //         console.log(data);
                     //     });
                     // },
-                    title: 'Enter username'
+                    title: d.dataset.title ? d.dataset.title : "Edit data"
                 });
             }
         })
