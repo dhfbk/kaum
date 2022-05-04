@@ -37,12 +37,34 @@ switch ($InputData['sub']) {
             dieWithError("Wrong sentence ID");
         }
 
+        // $tokens = $tokens['tokens'];
+
         // TODO: Check length?
-        // $row = $result->fetch_array(MYSQLI_ASSOC);
+        $row = $result->fetch_array(MYSQLI_ASSOC);
+        $orig_tokens = hssh_getTokens($row['content']);
+        $tokens = json_decode($_REQUEST['tokens'], true);
+
+        if (count($orig_tokens) != count($tokens['tokens'])) {
+            dieWithError("Token count mismatch");
+        }
+
+        $data = [
+            "sentence" => $id,
+            "user" => $_SESSION['StudentLogin'],
+            "session_id" => session_id(),
+            "data" => json_encode($tokens)
+        ];
+        $query = queryinsert("hssh_annotations", $data);
+        // $ret['query'] = $query;
+        $result = $mysqli->query($query);
+        if (!$result) {
+            dieWithError($mysqli->error);
+        }
 
         // TODO: Check tokens
 
-        $ret['request'] = $_REQUEST;
+        // $ret['tokens'] = $tokens;
+        // $ret['request'] = $tokens['tokens'];
 
         break;
 
@@ -104,6 +126,7 @@ switch ($InputData['sub']) {
 
     case "saveGame":
         checkStudentLogin();
+        // $ret['request'] = $_REQUEST;
         $RowTask = checkTask();
         $data = $RowTask['data'];
         if (!$_REQUEST['save_game']) {
