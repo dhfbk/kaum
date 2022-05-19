@@ -16,7 +16,7 @@
         Loading
     </p>
     <template v-else>
-        <p v-if="projectList.length == 0">
+        <p v-if="projectList.length === 0">
             No projects yet
         </p>
         <table v-else class="table">

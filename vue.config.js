@@ -4,6 +4,7 @@ const {defineConfig} = require('@vue/cli-service')
 // const dotenv = require('dotenv').config({ path: __dirname + '/.env' })
 
 module.exports = defineConfig({
+    publicPath: "/kaum/",
     transpileDependencies: true,
     // configureWebpack: {
     //     resolve: {

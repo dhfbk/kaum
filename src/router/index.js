@@ -2,6 +2,7 @@ import {createRouter, createWebHashHistory} from 'vue-router'
 import HelloI18n from '@/views/HelloI18n.vue'
 import ProjectsView from '@/views/ProjectsView.vue'
 import HomeView from '@/views/HomeView.vue'
+import AdminView from '@/views/AdminView'
 import SingleProjectView from '@/views/SingleProjectView.vue'
 import ProjectFormView from '@/views/ProjectFormView.vue'
 
@@ -10,6 +11,11 @@ const routes = [
         path: '/',
         name: 'home',
         component: HomeView
+    },
+    {
+        path: '/admin',
+        name: "admin",
+        component: AdminView
     },
     {
         path: '/i18n',

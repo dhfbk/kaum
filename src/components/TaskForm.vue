@@ -1,4 +1,5 @@
 <template>
+    <p>{{ values }}</p>
     <h1>
         {{ props.title }}
     </h1>
@@ -6,7 +7,6 @@
         <LoadingSpinner v-show="loadingClone"/>
         <em>{{ cloneText }}</em>
     </p>
-    <p>{{ values }}</p>
     <div class="my-3">
         <form id="taskForm" class="needs-validation" novalidate @submit.stop.prevent="submit">
             <div class="card mb-3">
@@ -53,7 +53,7 @@
             <div v-if="values.type" class="card mb-3">
                 <h5 class="card-header">{{ typeOptions[values.type] }} settings</h5>
                 <div class="card-body">
-                    <component :is="components[values.type]" :values="values"/>
+                    <component :is="formComponents[values.type]" :values="values" :underValidation="underValidation"/>
                 </div>
             </div>
             <div class="card mb-3">
@@ -186,6 +186,9 @@ const axios = inject('axios');
 const updateAxiosParams = inject("updateAxiosParams");
 const cloneText = ref("");
 
+const typeOptions = inject('typeOptions');
+const formComponents = inject('formComponents');
+
 const emit = defineEmits(['submit', 'cancel', 'back']);
 const props = defineProps({
     title: {
@@ -199,16 +202,11 @@ const props = defineProps({
     },
     formLoadingPercent: {
         type: Number
-    },
-    typeOptions: {
-        type: Object
-    },
-    components: {
-        type: Object
     }
 });
 const values = ref(props.valuesProp);
 const loadingClone = ref(false);
+const underValidation = ref(false);
 
 const split = (string, part) => {
     if (part == 0) {
@@ -280,11 +278,14 @@ function cancel() {
 }
 
 function submit(event) {
+    underValidation.value = true;
     let form = event.srcElement;
     form.classList.add('was-validated')
     if (!form.checkValidity()) {
+        underValidation.value = false;
         return;
     }
+    underValidation.value = false;
 
     emit('submit', values.value);
 }
