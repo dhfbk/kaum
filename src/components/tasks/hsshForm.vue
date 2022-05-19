@@ -8,7 +8,7 @@
     </div>
     <div class="row" v-if="!hsshLoading">
         <div class="col-md-4">
-            <label class="form-label" for="annotationsPerInstance">Annotations per instance</label>
+            <label class="form-label" for="annotationsPerInstance">Annotations per instance:</label>
             <input v-model="values.type_info['annotations']" name="annotations" class="form-control"
                    id="annotationsPerInstance"
                    type="number" min="1" :max="values.students"
@@ -105,9 +105,9 @@ onMounted(async function () {
         if (!values.value['type_info']['dataset_' + t]) {
             values.value['type_info']['dataset_' + t] = "";
         }
-        if (!values.value['type_info']['annotations']) {
-            values.value['type_info']['annotations'] = store.state.options.task_default_annotations;
-        }
+    }
+    if (!values.value['type_info']['annotations']) {
+        values.value['type_info']['annotations'] = store.state.options.task_default_annotations;
     }
     await axios.get("?", {
         "params": {

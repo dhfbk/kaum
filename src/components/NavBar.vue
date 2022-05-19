@@ -2,7 +2,7 @@
     <nav class="navbar navbar-light bg-light navbar-expand-md">
         <div class="container-fluid">
             <router-link to="/" class="navbar-brand">
-                <img src="img/logo_kidactions4horizontal.png" alt="Kid Actions logo" height="30">
+                <img :src="`${publicPath}/img/logo_kidactions4horizontal.png`" alt="Kid Actions logo" height="30">
             </router-link>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                     data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
@@ -14,6 +14,9 @@
                     <li class="nav-item">
                         <router-link to="/" class="nav-link">Home</router-link>
                         <!-- <a class="nav-link active" aria-current="page" href="#">Home</a> -->
+                    </li>
+                    <li v-if="store.state.loggedAdmin">
+                        <router-link to="/admin" class="nav-link">Task management</router-link>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#" @click="logout()">Logout</a>
@@ -33,6 +36,7 @@ const axios = inject('axios')
 const updateAxiosParams = inject('updateAxiosParams');
 const store = useStore();
 const router = useRouter();
+const publicPath = process.env.BASE_URL;
 
 function logout() {
     // No comment...

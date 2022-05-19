@@ -8,7 +8,7 @@
     </div>
     <div class="row">
         <div class="col">
-            <label class="form-label" for="descriptionArea">Initial description of the activity</label>
+            <label class="form-label" for="descriptionArea">Initial description of the activity:</label>
             <textarea v-model="values.type_info['description']"
                       name="description" class="form-control"
                       id="descriptionArea" rows="5"
@@ -31,7 +31,7 @@
             </div>
         </div>
         <div class="col-md-6">
-            <label class="form-label" for="channelName">Channel name (letters, numbers and dashes)</label>
+            <label class="form-label" for="channelName">Channel name (letters, numbers and dashes):</label>
             <input v-model="values.type_info['channel_name']" :minlength="3"
                    name="channelname" class="form-control"
                    id="channelName" type="text" placeholder="Channel name" required/>

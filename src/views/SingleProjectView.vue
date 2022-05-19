@@ -3,8 +3,6 @@
         <TaskForm :formLoadingPercent="formLoadingPercent"
                   :disableSubmit="formLoading"
                   :valuesProp="getInitialValues()"
-                  :typeOptions="typeOptions"
-                  :components="components"
                   title="Add task"
                   @submit="submitNewTask"
                   @cancel="cancel"
@@ -22,7 +20,7 @@
 </template>
 
 <script setup>
-import {inject, ref, defineAsyncComponent, shallowRef, onMounted} from 'vue'
+import {inject, ref} from 'vue'
 import {useStore} from 'vuex'
 import {useRoute, useRouter} from 'vue-router'
 
@@ -41,9 +39,6 @@ const updateAxiosParams = inject('updateAxiosParams');
 const formLoading = ref(false);
 const formLoadingPercent = ref(0);
 const abortController = ref(new AbortController());
-
-const typeOptions = ref({});
-const components = shallowRef({});
 
 const today = new Date();
 const final_day = new Date();
@@ -172,20 +167,20 @@ async function submitNewTask(v) {
         });
 }
 
-onMounted(async function () {
-    await axios.get("?", {
-        "params": {
-            "action": "taskTypes"
-        }
-    })
-        .then((response) => {
-            typeOptions.value = response.data.types;
-            for (let prop in typeOptions.value) {
-                components.value[prop] = defineAsyncComponent(() =>
-                    import(`@/components/tasks/${prop}Form.vue`)
-                )
-            }
-        });
-});
+// onMounted(async function () {
+//     await axios.get("?", {
+//         "params": {
+//             "action": "taskTypes"
+//         }
+//     })
+//         .then((response) => {
+//             typeOptions.value = response.data.types;
+//             for (let prop in typeOptions.value) {
+//                 components.value[prop] = defineAsyncComponent(() =>
+//                     import(`@/components/tasks/${prop}Form.vue`)
+//                 )
+//             }
+//         });
+// });
 
 </script>

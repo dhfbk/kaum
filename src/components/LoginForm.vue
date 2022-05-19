@@ -3,28 +3,30 @@
         <div class="row d-flex justify-content-center">
             <div class="col" id="loginForm">
                 <div class="card px-5 py-5" id="form1">
-                    <form class="form-data">
+                    <form class="form-data text-center">
                         <p>
-                            <img id="imglogo" src="img/logo_kidactions4.png"/>
+                            <img id="imglogo" :src="`${publicPath}/img/logo_kidactions4.png`"/>
                         </p>
                         <h1>
                             User Management
                         </h1>
-                        <div class="forms-inputs mb-4">
-                            <span>Username</span>
-                            <input autocomplete="off" type="text" v-model="username"
-                                   class="form-control"
-                                   v-bind:class="{'is-invalid' : !validField(username) && usernameBlurred}"
-                                   v-on:blur="usernameBlurred = true">
-                            <div class="invalid-feedback">A valid username is required!</div>
-                        </div>
-                        <div class="forms-inputs mb-4">
-                            <span>Password</span>
-                            <input autocomplete="off" type="password" v-model="password"
-                                   class="form-control"
-                                   v-bind:class="{'is-invalid' : !validField(password) && passwordBlurred}"
-                                   v-on:blur="passwordBlurred = true">
-                            <div class="invalid-feedback">A valid password is required!</div>
+                        <div class="text-start">
+                            <div class="forms-inputs mb-4">
+                                <label for="adminlogin">Username</label>
+                                <input autocomplete="off" type="text" v-model="username"
+                                       class="form-control" id="adminlogin"
+                                       v-bind:class="{'is-invalid' : !validField(username) && usernameBlurred}"
+                                       v-on:blur="usernameBlurred = true">
+                                <div class="invalid-feedback">A valid username is required!</div>
+                            </div>
+                            <div class="forms-inputs mb-4">
+                                <label for="adminpassword">Password</label>
+                                <input autocomplete="off" type="password" v-model="password"
+                                       class="form-control" id="adminpassword"
+                                       v-bind:class="{'is-invalid' : !validField(password) && passwordBlurred}"
+                                       v-on:blur="passwordBlurred = true">
+                                <div class="invalid-feedback">A valid password is required!</div>
+                            </div>
                         </div>
                         <div class="mb-3">
                             <button v-on:click.stop.prevent="submit" class="btn btn-dark w-100">Login</button>
@@ -45,6 +47,7 @@ const username = ref("");
 const password = ref("");
 const usernameBlurred = ref(false);
 const passwordBlurred = ref(false);
+const publicPath = process.env.BASE_URL;
 
 // watch(username, (newValue) => {
 //   console.log(newValue);

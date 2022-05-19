@@ -30,7 +30,7 @@
 </template>
 
 <script setup>
-import {computed, inject, onMounted, provide, ref} from 'vue'
+import {computed, inject, onMounted, provide, ref, defineAsyncComponent, shallowRef, onBeforeMount} from 'vue'
 import {useStore} from 'vuex'
 // import {useRouter} from 'vue-router';
 
@@ -51,12 +51,19 @@ const store = useStore();
 
 const loggedIn = computed(() => store.state.loggedIn);
 
+const typeOptions = ref({});
+const formComponents = shallowRef({});
+const adminComponents = shallowRef({});
+
 function showModalWindow(t) {
     showModal.value = true;
     modalMessage.value = t;
 }
 
 provide('showModalWindow', showModalWindow);
+provide('typeOptions', typeOptions);
+provide('formComponents', formComponents);
+provide('adminComponents', adminComponents);
 
 async function loadUserInfo() {
     await axios.get("?", {"params": {"action": "userinfo", ...updateAxiosParams()}})
@@ -75,8 +82,14 @@ async function loadUserInfo() {
         });
 }
 
-onMounted(function () {
-    loadUserInfo();
+// This is here so that the types
+// are loaded before the app is mounted
+onBeforeMount(async function() {
+    await loadTypeOptions();
+});
+
+onMounted(async function () {
+    await loadUserInfo();
 });
 
 function submit({username, password}) {
@@ -109,6 +122,34 @@ function submit({username, password}) {
                 ? reason.response.data.error
                 : reason.response.statusText;
         });
+}
+
+async function loadTypeOptions() {
+    await axios.get("?", {
+        "params": {
+            "action": "taskTypes"
+        }
+    })
+        .then((response) => {
+            typeOptions.value = response.data.types;
+            for (let prop in typeOptions.value) {
+                formComponents.value[prop] = defineAsyncComponent(() =>
+                    import(`@/components/tasks/${prop}Form.vue`)
+                        .then()
+                        .catch(() => {
+                            // ignored
+                        })
+                )
+                adminComponents.value[prop] = defineAsyncComponent(() =>
+                    import(`@/components/tasks/${prop}Admin.vue`)
+                        .then()
+                        .catch(() => {
+                            // ignored
+                        })
+                );
+            }
+        });
+
 }
 </script>
 
