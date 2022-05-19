@@ -68,6 +68,78 @@ switch ($InputData['sub']) {
 
         break;
 
+    case "nextSentence":
+        checkStudentLogin();
+        $RowTask = checkTask();
+        validate($_REQUEST, [
+            'set' => 'required|in:ch,gr',
+            'last_id' => 'integer',
+        ]);
+        $UserData = $RowTask['user_info']['data'];
+        $cluster = addslashes($UserData['rc_cluster']);
+        $set = addslashes($_REQUEST['set']);
+        $query = "SELECT c.id,
+                   r.content,
+                   GROUP_CONCAT(a.session_id) annotations
+            FROM   `hssh_ds_task_cluster` c
+                   LEFT JOIN hssh_rows r
+                          ON r.id = c.row
+                   LEFT JOIN hssh_datasets d
+                          ON d.id = r.dataset_id
+                   LEFT JOIN hssh_annotations a
+                          ON a.sentence = c.id AND a.deleted = '0'
+            WHERE  c.task = '{$RowTask['id']}'
+                   AND c.cluster = '{$cluster}'
+                   AND d.type = '{$set}'
+            GROUP  BY c.id,
+                      r.content";
+        // $ret['query'] = str_replace("\n", " ", $query);
+        $result = $mysqli->query($query);
+        if (!$result->num_rows) {
+            dieWithError("No available sentences");
+        }
+        $found = $_REQUEST['last_id'] ? false : true;
+        $FirstRow = false;
+        $FirstRowWithoutAnnotations = false;
+        $FinalRow = false;
+        $FollowingRow = false;
+        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+            if (!$FirstRow) {
+                $FirstRow = $row;
+            }
+            if (!$FirstRowWithoutAnnotations && !$row['annotations']) {
+                $FirstRowWithoutAnnotations = $row;
+            }
+            if ($found && !$row['annotations']) {
+                $FinalRow = $row;
+                break;
+            }
+            if ($found && !$FollowingRow) {
+                $FollowingRow = $row;
+            }
+            if ($_REQUEST['last_id'] && $row['id'] == $_REQUEST['last_id']) {
+                $found = true;
+            }
+        }
+        if (!$FinalRow) {
+            if ($FollowingRow) {
+                $FinalRow = $FollowingRow;
+            }
+            else if ($FirstRowWithoutAnnotations) {
+                $FinalRow = $FirstRowWithoutAnnotations;
+            }
+            else {
+                $FinalRow = $FirstRow;
+            }
+        }
+
+        $ret['sentence'] = [
+                "id" => $FinalRow['id'],
+                "tokens" => hssh_getTokens($FinalRow['content']),
+                "annotated" => $FinalRow['annotations'] ? true : false
+            ];
+        break;
+
     case "sentences":
         checkStudentLogin();
         $RowTask = checkTask();
