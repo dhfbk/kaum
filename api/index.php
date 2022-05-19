@@ -157,6 +157,45 @@ switch ($Action) {
         }
         break;
 
+    case "userToggleAvailability":
+        checkLogin();
+        $RowUser = find("users", $_REQUEST['id'], "Unable to find user");
+        $continue = false;
+        if (isAdmin()) {
+            $continue = true;
+        }
+        else {
+            if (!$RowUser['educator']) {
+                $info = checkProject($RowUser['project']);
+                $continue = true;
+            }
+        }
+
+        if (!$continue) {
+            dieWithError("Unauthorized operation", 401);
+        }
+
+        $RowUser['data']['disabled'] = !$RowUser['data']['disabled'];
+        $dataJson = addslashes(json_encode($RowUser['data']));
+        $query = "UPDATE users SET data = '$dataJson' WHERE id = '{$RowUser['id']}'";
+        $result = $mysqli->query($query);
+        if (!$result) {
+            dieWithError($mysqli->error);
+        }
+
+        if ($RowUser['task']) {
+            $RowTask = checkTask($RowUser['task']);
+            $TaskID = $RowTask['id'];
+            @include("tasks/" . $RowTask['tool'] . "/_taskToggleAvailability.php");
+        }
+        else {
+            foreach ($TaskTypes as $index => $taskName) {
+                $UserID = $RowUser['id'];
+                @include("tasks/" . $index . "/_userToggleAvailability.php");
+            }
+        }
+        break;
+
     // PROJECTS
 
     case "projectList":
@@ -205,7 +244,7 @@ switch ($Action) {
 
         $Row['data']['downloadedPasswords'] = true;
         $dataJson = addslashes(json_encode($Row['data']));
-        $query = "UPDATE projects SET data = '$dataJson' WHERE id = '${Row['id']}'";
+        $query = "UPDATE projects SET data = '$dataJson' WHERE id = '{$Row['id']}'";
         $result = $mysqli->query($query);
         if (!$result) {
             dieWithError($mysqli->error);
@@ -274,15 +313,27 @@ switch ($Action) {
     case "projectToggleAvailability":
         checkAdmin();
         $Row = find("projects", $_REQUEST['id'], "Unable to find project");
-        $query = "UPDATE projects SET disabled = NOT disabled WHERE id = '${Row['id']}'";
+        $query = "UPDATE projects SET disabled = NOT disabled WHERE id = '{$Row['id']}'";
         $result = $mysqli->query($query);
         if (!$result) {
             dieWithError($mysqli->error);
         }
         $tasks = getTasks($Row['id']);
         foreach($tasks as $task) {
-            $RowTask = $task;
+            $TaskID = $task['id'];
             @include("tasks/" . $task['tool'] . "/_taskToggleAvailability.php");
+        }
+
+        $Users = [];
+        $query = "SELECT * FROM users WHERE project = '{$Row['id']}' AND educator = '1'";
+        $resIndex = $mysqli->query($query);
+        while ($row = $resIndex->fetch_array(MYSQLI_ASSOC)) {
+            $Users[] = $row['id'];
+        }
+        foreach ($TaskTypes as $index => $taskName) {
+            foreach ($Users as $UserID) {
+                @include("tasks/" . $index . "/_userToggleAvailability.php");
+            }
         }
 
         break;
@@ -375,6 +426,7 @@ switch ($Action) {
 
     case "logout":
         unset($_SESSION['Login']);
+        unset($_SESSION['StudentLogin']);
         unset($_SESSION['Admin']);
         break;
 
@@ -384,13 +436,14 @@ switch ($Action) {
 
     case "taskToggleAvailability":
         $RowTask = checkTask($_REQUEST['id']);
-        $query = "UPDATE tasks SET disabled = NOT disabled WHERE id = '${RowTask['id']}'";
+        $query = "UPDATE tasks SET disabled = NOT disabled WHERE id = '{$RowTask['id']}'";
         $result = $mysqli->query($query);
         if (!$result) {
             dieWithError($mysqli->error);
         }
 
         $RowTask = checkTask($_REQUEST['id']);
+        $TaskID = $RowTask['id'];
         @include("tasks/" . $RowTask['tool'] . "/_taskToggleAvailability.php");
         break;
 
@@ -402,7 +455,7 @@ switch ($Action) {
             dieWithError("Only disabled tasks can be closed");
         }
 
-        $query = "UPDATE tasks SET closed = '1' WHERE id = '${RowTask['id']}'";
+        $query = "UPDATE tasks SET closed = '1' WHERE id = '{$RowTask['id']}'";
         $result = $mysqli->query($query);
         if (!$result) {
             dieWithError($mysqli->error);
@@ -447,7 +500,26 @@ switch ($Action) {
                     dieWithError("Name length cannot exceed {$Options['max_user_name_len']} chars");
                 }
 
-                $UserData['name'] = $NewValue;
+                if (!$_REQUEST['name']) {
+                    dieWithError("Missing field");
+                }
+                $pieces = preg_split('/_/', $_REQUEST['name']);
+                $Field = $pieces[count($pieces) - 1];
+                validate(["field" => $Field], [
+                    'field' => 'required|in:name,email',
+                ]);
+
+                if (!$RowUser['educator'] && $Field != "name") {
+                    dieWithError("Only educators can have fields different than 'name'");
+                }
+                if ($Field == "email") {
+                    validate(["email" => $NewValue], [
+                        'email' => 'email',
+                    ]);
+                }
+                // $ret['field'] = $Field;
+
+                $UserData[$Field] = $NewValue;
                 $dataJson = addslashes(json_encode($UserData));
                 $query = "UPDATE users SET data = '$dataJson' WHERE id = '{$RowUser['id']}'";
                 $mysqli->query($query);

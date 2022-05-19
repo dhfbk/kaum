@@ -10,8 +10,8 @@ if ($RowTask['data']['type_info']['save_game']) {
 }
 $ret['save_game'] = $save_game;
 $ret['language'] = "it";
-$ret['true'] = HSSH_True;
-$ret['false'] = HSSH_False;
+$ret['trueLabel'] = HSSH_True;
+$ret['falseLabel'] = HSSH_False;
 
 // $ret['project'] = $RowProject;
 // $ret['task'] = $RowTask['data']['type_info']['save_game'];

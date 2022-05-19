@@ -38,28 +38,9 @@ switch ($InputData['sub']) {
         break;
 
     case "test":
-        $group = new \ATDev\RocketChat\Groups\Group("88Mg3CCkD5azLKoxN");
-        $result = $group->messages();
-        foreach ($result as $message) {
-            $t = $message->getT();
-            if ($t) {
-                continue;
-            }
-            echo $message->getUsername() . " - ";
-            echo $message->getMsg() . "\n";
-            // print_r($message);
-        }
-
-        // $listing = \ATDev\RocketChat\Groups\Group::listing();
-        // foreach ($listing as $group) {
-        //     print_r($group);
-        // }
-
-        // print_r($listing[0]->getGroupId());
-        // $user = new \ATDev\RocketChat\Users\User("t6-user1");
-        // $i = $user->info();
-        // print_r($i);
-        // print_r($user);
+        $user = new \ATDev\RocketChat\Users\User("t5-user1");
+        $i = $user->info();
+        $ret['info'] = $i;
         break;
 
     case "sos":

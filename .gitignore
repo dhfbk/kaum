@@ -27,4 +27,5 @@ api/composer.lock
 api/vendor
 api/config.php
 api/info.php
+api/setup.php
 
