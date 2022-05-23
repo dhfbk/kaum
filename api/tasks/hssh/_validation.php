@@ -5,7 +5,7 @@ if (!$RowProject) {
 }
 
 validate($Info['type_info'], [
-    'annotations' => 'required|max:' . $Info['students'],
+    'annotations' => 'required|min:1|max:' . $Info['students'],
 ]);
 
 if (!$CheckOnly) {

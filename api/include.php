@@ -9,10 +9,10 @@ if ($mysqli->connect_errno) {
     dieWithError("Error in DB connection: " . $mysqli->connect_error);
 }
 
-// $_SESSION['Options'] = loadOptions();
-if (!isset($_SESSION['Options']) || !$_SESSION['Options']) {
-    $_SESSION['Options'] = loadOptions();
-}
+$_SESSION['Options'] = loadOptions();
+// if (!isset($_SESSION['Options']) || !$_SESSION['Options']) {
+//     $_SESSION['Options'] = loadOptions();
+// }
 
 mysqli_options($mysqli, MYSQLI_OPT_INT_AND_FLOAT_NATIVE, true);
 
@@ -275,11 +275,12 @@ function checkField($var, $err_msg) {
     return $var;
 }
 
-function dieWithError($text, $code = 400) {
+function dieWithError($text, $code = 400, $addenda = []) {
     http_response_code($code);
     $ret = array();
     $ret['result'] = "ERR";
     $ret['error'] = $text;
+    $ret = array_merge($ret, $addenda);
     echo json_encode($ret);
     exit();
 }

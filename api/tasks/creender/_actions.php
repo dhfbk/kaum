@@ -1,17 +1,61 @@
 <?php
 
 switch ($InputData['sub']) {
-    case "listDatasets":
+    case "listChoices":
+        checkLogin();
         $projectID = 0;
         if ($InputData['project_id']) {
             $RowProject = checkProject($InputData['project_id']);
             $projectID = $RowProject['id'];
         }
-        $ret['datasets'] = creender_listDatasets($ProjectID);
+        $ret['datasets'] = creender_listChoices($projectID);
+        break;
+
+    case "addChoice":
+        checkLogin();
+        $Data = $_REQUEST['data'];
+        creender_addChoiceList($Data);
+        break;
+
+    case "listDatasets":
+        checkLogin();
+        $projectID = 0;
+        if ($InputData['project_id']) {
+            $RowProject = checkProject($InputData['project_id']);
+            $projectID = $RowProject['id'];
+        }
+        $ret['datasets'] = creender_listDatasets($projectID);
         break;
 
     case "addDataset":
-        checkAdmin();
+        checkLogin();
+        $insertInfo = [];
+        if (isAdmin()) {
+            if (empty($_REQUEST['save'])) {
+                $insertInfo['user_id'] = -1;
+            }
+        }
+        else {
+            $UserID = $_SESSION['Login'];
+            if (!empty($_REQUEST['save'])) {
+                $RowUser = find("users", $UserID, "Unable to find user");
+                $RowProject = checkProject($RowUser['project'], $RowUser['id']);
+                $insertInfo['project_id'] = $RowProject['id'];
+            }
+            else {
+                $insertInfo['user_id'] = $UserID;
+            }
+        }
+        // checkAdmin();
+        $baseFolder = $Options['creender_images_path'];
+
+        $testFile = $baseFolder . "/.creender_test_file";
+        $res = touch($testFile);
+        if (!$res) {
+            dieWithError("Unable to write to folder " . $baseFolder);
+        }
+        unlink($testFile);
+
         $Info = json_decode($_REQUEST['info'], true);
         if (!$_FILES['f'] || !count($_FILES['f']['name'])) {
             dieWithError("No files found");
@@ -36,23 +80,27 @@ switch ($InputData['sub']) {
             $filename = $zip->getNameIndex($i);
             $parts = pathinfo($filename);
             $ext = strtolower($parts['extension']);
+            $basename = $parts['basename'];
+            if ($basename[0] == ".") {
+                continue;
+            }
             if (!in_array($ext, $creenderAllowedExtensions)) {
                 continue;
             }
-            $fileList[] = ['name' => $filename, 'basename' => $parts['basename']];
+            $fileList[] = ['name' => $filename, 'basename' => $basename];
         }
         if (!count($fileList)) {
             dieWithError("Unable to find images in ZIP file");
         }
 
-        $query = queryinsert("creender_datasets", ["name" => $Info['name']]);
+        $insertInfo['name'] = $Info['name'];
+        $query = queryinsert("creender_datasets", $insertInfo);
         $result = $mysqli->query($query);
         if (!$result) {
             dieWithError($mysqli->error);
         }
         $DatasetID = $mysqli->insert_id;
 
-        $baseFolder = $Options['creender_images_path'];
         $thisFolder = $baseFolder . "/" . $DatasetID;
         mkdir($thisFolder);
         $ret['parts'] = [];
@@ -81,7 +129,7 @@ switch ($InputData['sub']) {
         $ret['files'] = $fileList;
         $ret['folder'] = $baseFolder;
 
-        touch($baseFolder . "/prova");
+        // touch($baseFolder . "/prova");
 
         // $content = $zip->getFromName($filename);
 

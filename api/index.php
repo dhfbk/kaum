@@ -573,7 +573,7 @@ switch ($Action) {
                 ]);
                 $Info['time']['start_date'] = date("d/m/Y", strtotime($Info['time']['start_date']));
                 $Info['time']['end_date'] = date("d/m/Y", strtotime($Info['time']['end_date']));
-                if ($Info['automatic_timing']) {
+                if (!empty($Info['automatic_timing'])) {
                     validate($Info['time'], [
                         'afternoon_from' => 'required|date:H:i',
                         'morning_from' => 'required|date:H:i',
