@@ -45,10 +45,17 @@ const final_day = new Date();
 final_day.setDate(today.getDate() + Number(store.state.options.task_default_days_duration));
 
 function addTask(cloneID) {
-    router.push({
-        name: "projectIdNewTask",
-        params: {cloneID: cloneID, id: route.params.id}
-    });
+    if (cloneID === undefined) {
+        router.push({
+            name: "projectIdNewTask",
+            params: {id: route.params.id}
+        });
+    } else {
+        router.push({
+            name: "projectIdCloneTask",
+            params: {cloneID: cloneID, id: route.params.id}
+        });
+    }
 }
 
 function getInitialValues() {

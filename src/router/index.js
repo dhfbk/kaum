@@ -44,6 +44,14 @@ const routes = [
         }
     },
     {
+        path: '/project/:id/new/:cloneID',
+        name: 'projectIdCloneTask',
+        component: SingleProjectView,
+        meta: {
+            action: "add"
+        }
+    },
+    {
         path: '/project/:id/:task',
         name: 'projectIdTaskInfo',
         component: SingleProjectView,

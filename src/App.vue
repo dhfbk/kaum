@@ -30,7 +30,7 @@
 </template>
 
 <script setup>
-import {computed, inject, onMounted, provide, ref, defineAsyncComponent, shallowRef, onBeforeMount} from 'vue'
+import {computed, inject, onMounted, provide, ref, defineAsyncComponent, shallowRef} from 'vue'
 import {useStore} from 'vuex'
 // import {useRouter} from 'vue-router';
 
@@ -78,18 +78,20 @@ async function loadUserInfo() {
             }
         })
         .then(() => {
-            mainLoaded.value = true;
+            // mainLoaded.value = true;
         });
 }
 
 // This is here so that the types
 // are loaded before the app is mounted
-onBeforeMount(async function() {
-    await loadTypeOptions();
-});
+// onBeforeMount(async function() {
+//     await loadTypeOptions();
+// });
 
 onMounted(async function () {
     await loadUserInfo();
+    await loadTypeOptions();
+    mainLoaded.value = true;
 });
 
 function submit({username, password}) {
@@ -154,5 +156,51 @@ async function loadTypeOptions() {
 </script>
 
 <style>
+.accordion-header button {
+    font-weight: bold;
+}
 
+.was-validated .no-validation:focus {
+    color: #212529;
+    background-color: #fff;
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgb(13 110 253 / 25%);
+}
+
+.was-validated .form-control.no-validation:valid,
+.was-validated .form-control.no-validation:invalid {
+    border-color: #212529;
+    background: none;
+    padding: .375rem .75rem;
+}
+
+.was-validated .form-control-sm.no-validation:valid,
+.was-validated .form-control-sm.no-validation:invalid {
+    border-color: #ced4da;
+    background: none;
+    padding: .25rem .5rem;
+}
+
+.was-validated .no-validation:invalid ~ .invalid-feedback,
+.was-validated .no-validation:invalid ~ .invalid-tooltip {
+    display: none;
+}
+
+.was-validated .form-check-input.no-validation-cb:valid ~ .form-check-label,
+.was-validated .form-check-input.no-validation-cb:invalid ~ .form-check-label {
+    color: inherit;
+}
+
+.was-validated .form-check-input.no-validation-cb:valid,
+.was-validated .form-check-input.no-validation-cb:invalid {
+    background-color: white;
+    border: 1px solid rgba(0, 0, 0, .25);
+}
+
+.was-validated .form-check-input.no-validation-cb:valid:checked,
+.was-validated .form-check-input.no-validation-cb:invalid:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
 </style>

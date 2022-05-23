@@ -243,8 +243,12 @@ function copyValuesForClonation(o1, o2, tiLabels) {
     o1.time = o2.time;
 
     for (let l of tiLabels) {
+        console.log("Replacing " + l + ": " + o1.type_info[l] + " => " + o2.type_info[l]);
         o1.type_info[l] = o2.type_info[l];
     }
+    console.log(o1);
+    console.log(o2);
+    console.log(tiLabels);
 }
 
 onMounted(async function () {

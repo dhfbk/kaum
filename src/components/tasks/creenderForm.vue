@@ -94,7 +94,8 @@
             <h5>Choices</h5>
         </div>
 
-        <creender-choice :choices="values.type_info['choices']"></creender-choice>
+        <creender-choice :use-button="false" :choices="values.type_info['choices']"
+                         :list="choiceList" :save-values="values.type_info['save_values']"></creender-choice>
 
         <div class="col-12 mt-3 mb-1">
             <hr/>
@@ -154,7 +155,8 @@
                 </div>
             </div>
 
-            <CreenderAddDataset v-if="!underValidation" :useSave="true" @updateDatasets="updateDatasets()"></CreenderAddDataset>
+            <CreenderAddDataset v-if="!underValidation" :useSave="true"
+                                @updateDatasets="updateDatasets()"></CreenderAddDataset>
         </div>
     </div>
 </template>
@@ -173,6 +175,7 @@ const route = useRoute();
 const creenderLoading = ref(true);
 const datasets = ref({});
 const store = useStore();
+const choiceList = ref([]);
 
 const props = defineProps({
     values: {
@@ -185,6 +188,27 @@ const props = defineProps({
 const values = ref(props.values);
 
 // console.log("Loaded!");
+
+async function updateChoices() {
+    await axios.get("?", {
+        "params": {
+            "action": "task",
+            "sub": "listChoices",
+            "type": "creender",
+            ...updateAxiosParams()
+        }
+    })
+        .then((response) => {
+            choiceList.value = response.data.datasets;
+        })
+        .catch((reason) => {
+            console.log(reason);
+        })
+        .then(() => {
+            // creenderLoading.value = false;
+        });
+
+}
 
 async function updateDatasets() {
     creenderLoading.value = true;
@@ -201,18 +225,20 @@ async function updateDatasets() {
             // console.log(response.data);
             datasets.value = response.data.datasets;
             for (let k in datasets.value) {
-                values.value.type_info['dataset_' + k] = 0;
+                if (values.value.type_info['dataset_' + k] === undefined) {
+                    values.value.type_info['dataset_' + k] = 0;
+                }
             }
         })
         .catch((reason) => {
             console.log(reason);
         })
         .then(() => {
-            creenderLoading.value = false;
+            // creenderLoading.value = false;
         });
 }
 
-onBeforeMount(function() {
+onBeforeMount(function () {
     if (!values.value['type_info']['choices']) {
         values.value['type_info']['choices'] = [];
     }
@@ -231,6 +257,9 @@ onBeforeMount(function() {
     if (!values.value['type_info']['annotations']) {
         values.value['type_info']['annotations'] = store.state.options.task_default_annotations;
     }
+    if (!values.value['type_info']['save_values']) {
+        values.value['type_info']['save_values'] = {save: false, name: ""};
+    }
 })
 
 onMounted(async function () {
@@ -245,6 +274,8 @@ onMounted(async function () {
     // }
 
     await updateDatasets();
+    await updateChoices();
+    creenderLoading.value = false;
 })
 </script>
 

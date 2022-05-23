@@ -9,13 +9,13 @@
         <div class="col-12">
             <input v-model="values.name" :minlength="store.state.options.creender_dataset_name_minlength"
                    name="name" class="form-control" :class="{'form-control-sm': useSave, 'no-validation': useSave}"
-                   type="text" placeholder="Dataset name" id="formCreenderAddDataset_name" required/>
+                   type="text" placeholder="Dataset name" id="formCreenderAddDataset_name" :required="useSave ? null : true"/>
             <div class="invalid-feedback">Invalid name.</div>
         </div>
         <div class="col-12">
             <input ref="creenderFileInput" class="form-control"
                    :class="{'form-control-sm': useSave, 'no-validation': useSave}" type="file"
-                   @change="handleFileUpload( fileType, $event )" id="formCreenderAddDataset_file" required>
+                   @change="handleFileUpload( fileType, $event )" id="formCreenderAddDataset_file" :required="useSave ? null : true">
             <div class="invalid-feedback">You must select a file.</div>
         </div>
         <div v-if="props.useSave" class="col-12">
@@ -183,40 +183,4 @@ function addDataset() {
 
 <style scoped>
 
-.was-validated .no-validation:focus {
-    color: #212529;
-    background-color: #fff;
-    border-color: #86b7fe;
-    outline: 0;
-    box-shadow: 0 0 0 0.25rem rgb(13 110 253 / 25%);
-}
-
-.was-validated .no-validation:valid,
-.was-validated .no-validation:invalid {
-    border-color: #ced4da;
-    background: none;
-    padding: .25rem .5rem;
-}
-
-.was-validated .no-validation:invalid ~ .invalid-feedback,
-.was-validated .no-validation:invalid ~ .invalid-tooltip {
-    display: none;
-}
-
-.was-validated .no-validation-cb:valid ~ .form-check-label,
-.was-validated .no-validation-cb:invalid ~ .form-check-label {
-    color: inherit;
-}
-
-.was-validated .no-validation-cb:valid,
-.was-validated .no-validation-cb:invalid {
-    background-color: white;
-    border: 1px solid rgba(0, 0, 0, .25);
-}
-
-.was-validated .no-validation-cb:valid:checked,
-.was-validated .no-validation-cb:invalid:checked {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
-}
 </style>

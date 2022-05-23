@@ -1,10 +1,11 @@
 <template>
-    <h1>Task management</h1>
-<!--    <p>{{ adminComponents }}</p>-->
-    <!--    <p>{{typeOptions}}</p>-->
+    <h1 class="display-1 mt-3 mb-3">Task management</h1>
 
-    <div v-for="(c, i) in adminComponents" :key="i">
-        <component :is="c"/>
+    <div class="accordion" id="accordionAdmin">
+
+        <template v-for="(c, i) in adminComponents" :key="i">
+            <component :is="c"/>
+        </template>
     </div>
 </template>
 
