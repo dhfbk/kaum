@@ -73,6 +73,10 @@ function file_upload_max_size() {
   return $max_size;
 }
 
+function educatorName($id, $project_id) {
+    return "pr" . $project_id . "-educator" . $id;
+}
+
 function parse_size($size) {
   $unit = preg_replace('/[^bkmgtpezy]/i', '', $size); // Remove the non-unit characters from the size.
   $size = preg_replace('/[^0-9\.]/', '', $size); // Remove the non-numeric characters from the size.
@@ -116,17 +120,25 @@ function validate($data, $rules) {
 }
 
 function isAdmin() {
-    return isset($_SESSION['Admin']) && $_SESSION['Admin'];
+    return !empty($_SESSION['Admin']);
+}
+
+function isLogged() {
+    return !empty($_SESSION['Login']);
+}
+
+function isStudentLogged() {
+    return !empty($_SESSION['StudentLogin']);
 }
 
 function checkLogin() {
-    if (!isset($_SESSION['Login']) || !$_SESSION['Login']) {
+    if (!isLogged()) {
         dieWithError("User not logged in", 401);
     }
 }
 
 function checkStudentLogin() {
-    if (!isset($_SESSION['StudentLogin']) || !$_SESSION['StudentLogin']) {
+    if (!isStudentLogged()) {
         dieWithError("User not logged in", 401);
     }
 }
@@ -147,9 +159,10 @@ function getTasks($project_id, $getStudents = false) {
     $result = $mysqli->query($query);
     while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
         $row['data'] = json_decode($row['data'], true);
+        $row['students'] = $row['data']['students'];
         if ($getStudents !== false) {
-            $row['students'] = 0;
-            if (array_key_exists($row['id'], $getStudents)) {
+            if (array_key_exists($row['id'], $getStudents) && $getStudents[$row['id']]) {
+                $row['students'] = 0;
                 $row['students'] = $getStudents[$row['id']];
             }
         }
@@ -215,10 +228,16 @@ function checkTaskAvailability($id) {
     }
     $RowProject = checkProjectAvailability($Row['project_id']);
     $Row['project_info'] = $RowProject;
+    if (!$Row['confirmed']) {
+        dieWithError("Task is unconfirmed");
+    }
     if ($Row['disabled']) {
         dieWithError("Task is disabled");
     }
-    if ($Row['data']['automatic_timing']) {
+    if ($Row['closed']) {
+        dieWithError("Task is closed");
+    }
+    if (!empty($Row['data']['automatic_timing'])) {
         // check if time is ok
     }
     return $Row;

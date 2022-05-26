@@ -176,6 +176,9 @@ switch ($InputData['sub']) {
                       r.content";
         // $ret['query'] = str_replace("\n", " ", $query);
         $result = $mysqli->query($query);
+        if (!$result->num_rows) {
+            dieWithError("No available sentences");
+        }
         $offset = $offset % $result->num_rows;
         $total = $offset + $limit;
 

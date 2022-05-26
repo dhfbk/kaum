@@ -10,6 +10,7 @@ if (!$TaskID) {
 
 $query = "SELECT u.id, u.username, u.deleted, u.data,
     t.disabled task_disabled, t.deleted task_deleted,
+    t.closed task_closed, t.confirmed task_confirmed,
     p.disabled project_disabled, p.deleted project_deleted, p.confirmed project_confirmed
 FROM `users` u
 LEFT JOIN tasks t ON t.id = u.task
@@ -23,7 +24,9 @@ while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
     $active = 1;
     $active = $active * (1 - $row['deleted']);
     $active = $active * (1 - $disabled);
+    $active = $active * ($row['task_confirmed']);
     $active = $active * (1 - $row['task_disabled']);
+    $active = $active * (1 - $row['task_closed']);
     $active = $active * (1 - $row['task_deleted']);
     $active = $active * (1 - $row['project_disabled']);
     $active = $active * (1 - $row['project_deleted']);

@@ -79,8 +79,8 @@ foreach ($TaskTypes as $index => $taskName) {
 
 switch ($Action) {
     case "userLogin":
-        $username = checkField($_REQUEST['username'], "Missing username parameter");
-        $password = checkField($_REQUEST['password'], "Missing password parameter");
+        $username = @checkField($_REQUEST['username'], "Missing username parameter");
+        $password = @checkField($_REQUEST['password'], "Missing password parameter");
         $username = addslashes($username);
 
         $query = "SELECT * FROM users u
@@ -106,8 +106,8 @@ switch ($Action) {
         break;
 
     case "login":
-        $username = checkField($_REQUEST['username'], "Missing username parameter");
-        $password = checkField($_REQUEST['password'], "Missing password parameter");
+        $username = @checkField($_REQUEST['username'], "Missing username parameter");
+        $password = @checkField($_REQUEST['password'], "Missing password parameter");
 
         if ($username == "admin") {
             if (isset($Options['admin_password']) && $Options['admin_password'] === md5($password)) {
@@ -131,13 +131,18 @@ switch ($Action) {
             if (!$result->num_rows) {
                 dieWithError("User " . $username . " does not exist", 401);
             }
-            $row = $result->fetch_array(MYSQLI_ASSOC);
-            if ($row['password'] != md5($password)) {
+            $RowUser = $result->fetch_array(MYSQLI_ASSOC);
+            if ($RowUser['password'] != md5($password)) {
                 dieWithError("Invalid password", 401);
             }
-            checkProject($row['project'], $row['id']);
+            checkProject($RowUser['project'], $RowUser['id']);
             $_SESSION['Admin'] = false;
-            $_SESSION['Login'] = $row['id'];
+            $_SESSION['Login'] = $RowUser['id'];
+
+            foreach ($TaskTypes as $index => $taskName) {
+                @include("tasks/" . $index . "/_educatorLogin.php");
+            }
+
             $ret['session_id'] = session_id();
         }
         break;
@@ -212,7 +217,7 @@ switch ($Action) {
     case "projectConfirm":
         checkAdmin();
         $Row = find("projects", $_REQUEST['id'], "Unable to find project");
-        if (!$Row['data']['downloadedPasswords']) {
+        if (empty($Row['data']['downloadedPasswords'])) {
             dieWithError("You need to download the passwords before confirming a project");
         }
         $ProjectID = $Row['id'];
@@ -338,6 +343,74 @@ switch ($Action) {
 
         break;
 
+    case "educatorResetPassword":
+        checkAdmin();
+        $RowUser = find("users", $_REQUEST['id'], "Unable to find user");
+        if ($RowUser['project'] != $_REQUEST['project_id']) {
+            dieWithError("Unable to perform the operation");
+        }
+
+        $newPassword = password_generate(8);
+        $ret['password'] = $newPassword;
+
+        $newPassword = md5($newPassword);
+        $query = "UPDATE users SET password = '$newPassword' WHERE id = '{$RowUser['id']}'";
+        $result = $mysqli->query($query);
+        if (!$result) {
+            dieWithError($mysqli->error);
+        }
+        break;
+
+    case "educatorAdd":
+        checkAdmin();
+        $Row = find("projects", $_REQUEST['id'], "Unable to find project");
+        $query = "SELECT * FROM users WHERE project = '{$Row['id']}' AND educator = '1'";
+        $result = $mysqli->query($query);
+        $lastID = 0;
+        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+            if (preg_match("/educator([0-9]+)/", $row['username'], $matches)) {
+                $thisID = $matches[1];
+                if ($thisID > $lastID) {
+                    $lastID = $thisID;
+                }
+            }
+        }
+
+        $username = educatorName($lastID + 1, $Row['id']);
+        $data = [];
+        $data['project'] = $Row['id'];
+        $data['username'] = $username;
+        $password = password_generate(8);
+        if ($Row['confirmed']) {
+            $password = md5($password);
+        }
+        $data['password'] = $password;
+        $data['educator'] = 1;
+        $data['data'] = json_encode([
+            "name" => "",
+            "email" => "",
+            "disabled" => false
+        ]);
+        $query = queryinsert("users", $data);
+        $result = $mysqli->query($query);
+        if (!$result) {
+            dieWithError($mysqli->error);
+        }
+
+        $query = "SELECT * FROM users
+            WHERE educator = '1' AND project = '{$Row['id']}' AND deleted = '0'";
+        $result = $mysqli->query($query);
+
+        $Info = $Row['data'];
+        $Info['educators'] = $result->num_rows;
+        $dataJson = addslashes(json_encode($Info));
+        $query = "UPDATE projects SET data = '$dataJson' WHERE id = '{$Row['id']}'";
+        $mysqli->query($query);
+
+        $ret['username'] = $username;
+        $ret['password'] = $password;
+        break;
+
     case "projectAdd":
         checkAdmin();
         // missing validation
@@ -346,8 +419,7 @@ switch ($Action) {
         validate($orig_data, [
             'name' => 'required|min:' . $Options['project_name_minlength'],
             'educators' => 'required|numeric|min:1|max:' . $Options['project_max_educators'],
-            // 'students' => 'required|numeric|min:1|max:' . $Options['project_max_students'],
-            // 'passwords' => 'required|in:trivial,easy,difficult'
+            'language' => 'required|in:' . $Options['languages']
         ]);
 
         $data = ["name" => $orig_data['name'], "data" => json_encode($orig_data)];
@@ -365,7 +437,7 @@ switch ($Action) {
         for ($i = 0; $i < $orig_data['educators']; $i++) {
             $data = [];
             $data['project'] = $ProjectID;
-            $data['username'] = "pr" . $ProjectID . "-educator" . ($i + 1);
+            $data['username'] = educatorName($i + 1, $ProjectID);
             $data['password'] = password_generate(8);
             $data['educator'] = 1;
             $data['data'] = json_encode([
@@ -436,15 +508,71 @@ switch ($Action) {
 
     case "taskToggleAvailability":
         $RowTask = checkTask($_REQUEST['id']);
+        if (!$RowTask['confirmed']) {
+            dieWithError("The task is not confirmed");
+        }
+
         $query = "UPDATE tasks SET disabled = NOT disabled WHERE id = '{$RowTask['id']}'";
         $result = $mysqli->query($query);
         if (!$result) {
             dieWithError($mysqli->error);
         }
 
-        $RowTask = checkTask($_REQUEST['id']);
+        // $RowTask = checkTask($_REQUEST['id']);
         $TaskID = $RowTask['id'];
         @include("tasks/" . $RowTask['tool'] . "/_taskToggleAvailability.php");
+        break;
+
+    case "confirmTask":
+        $RowTask = checkTask($_REQUEST['id']);
+
+        if ($RowTask['confirmed']) {
+            dieWithError("This task is already confirmed");
+        }
+
+        $query = "UPDATE tasks SET confirmed = '1' WHERE id = '{$RowTask['id']}'";
+        $result = $mysqli->query($query);
+        if (!$result) {
+            dieWithError($mysqli->error);
+        }
+
+        $Info = $RowTask['data'];
+        $TaskID = $RowTask['id'];
+        $ProjectID = $RowTask['project_id'];
+
+        $pwList = explode("\n", $Options['nouns_for_passwords']);
+        $pwList = array_map("trim", $pwList);
+        $password_indexes = array_rand($pwList, $Info['students']);
+        for ($i = 0; $i < $Info['students']; $i++) {
+            $username = "t" . $TaskID . "-user" . ($i + 1);
+            $password = $username;
+            switch ($Info['passwords']) {
+                case "easy":
+                    $password = $pwList[$password_indexes[$i]];
+                    $n = mt_rand(0, 999);
+                    $password .= str_pad($n, 3, '0', STR_PAD_LEFT);
+                    break;
+
+                case "difficult":
+                    $password = password_generate();
+                    break;
+            }
+
+            $data = [
+                "project" => $ProjectID,
+                "task" => $TaskID,
+                "username" => $username,
+                "password" => $password,
+                "educator" => 0,
+                "data" => json_encode(["name" => "", "disabled" => false])
+            ];
+
+            $query = queryinsert("users", $data);
+            $result = $mysqli->query($query);
+        }
+
+        $TaskID = $RowTask['id'];
+        @include("tasks/" . $RowTask['tool'] . "/_confirmTask.php");
         break;
 
     case "closeTask":
@@ -557,7 +685,11 @@ switch ($Action) {
 
             case "add":
 
-                // TODO: depending on project, check that the type is active
+                $EditID = 0;
+                if (!empty($_REQUEST['edit_id'])) {
+                    checkTask($_REQUEST['edit_id']);
+                    $EditID = $_REQUEST['edit_id'];
+                }
 
                 validate($InputData, [
                     'type' => 'required|in:' . implode(",", array_keys($TaskTypes)),
@@ -571,16 +703,17 @@ switch ($Action) {
                     'students' => 'required|numeric|min:1|max:' . $Options['task_max_students'],
                     'passwords' => 'required|in:trivial,easy,difficult'
                 ]);
-                $Info['time']['start_date'] = date("d/m/Y", strtotime($Info['time']['start_date']));
-                $Info['time']['end_date'] = date("d/m/Y", strtotime($Info['time']['end_date']));
+                $Info['time']['start_date_s'] = date("d/m/Y", strtotime($Info['time']['start_date']));
+                $Info['time']['end_date_s'] = date("d/m/Y", strtotime($Info['time']['end_date']));
+                // dieWithError("OK", 400, ["info" => $Info]);
                 if (!empty($Info['automatic_timing'])) {
                     validate($Info['time'], [
                         'afternoon_from' => 'required|date:H:i',
                         'morning_from' => 'required|date:H:i',
                         'afternoon_to' => 'required|date:H:i',
                         'morning_to' => 'required|date:H:i',
-                        'start_date' => 'required|date:d/m/Y',
-                        'end_date' => 'required|date:d/m/Y',
+                        'start_date_s' => 'required|date:d/m/Y',
+                        'end_date_s' => 'required|date:d/m/Y',
                         'days' => 'required|min:1'
                     ]);
                     if (!$Info['time']['use_morning'] && !$Info['time']['use_afternoon']) {
@@ -614,8 +747,8 @@ switch ($Action) {
                         }
                     }
 
-                    $start_date = DateTime::createFromFormat('d/m/Y', $Info['time']['start_date']);
-                    $end_date = DateTime::createFromFormat('d/m/Y', $Info['time']['end_date']);
+                    $start_date = DateTime::createFromFormat('d/m/Y', $Info['time']['start_date_s']);
+                    $end_date = DateTime::createFromFormat('d/m/Y', $Info['time']['end_date_s']);
                     // $diff = $end_date->diff($start_date);
                     $diff = $start_date->diff($end_date);
                     if ($diff->invert) {
@@ -623,6 +756,9 @@ switch ($Action) {
                     }
                     // $ret['diff'] = print_r($diff, true);
                     // check dates
+                }
+                else {
+                    unset($Info['time']);
                 }
 
                 // break;
@@ -644,43 +780,24 @@ switch ($Action) {
                     "tool" => $Info['type'],
                     "data" => json_encode($Info)
                 ];
-                $query = queryinsert("tasks", $data);
+
+                if ($EditID) {
+                    $query = queryupdate("tasks", $data, ["id" => $EditID]);
+                }
+                else {
+                    $query = queryinsert("tasks", $data);
+                }
+                
                 $result = $mysqli->query($query);
                 if (!$result) {
                     dieWithError($mysqli->error);
                 }
 
-                $TaskID = $mysqli->insert_id;
-
-                $pwList = explode("\n", $Options['nouns_for_passwords']);
-                $pwList = array_map("trim", $pwList);
-                $password_indexes = array_rand($pwList, $Info['students']);
-                for ($i = 0; $i < $Info['students']; $i++) {
-                    $username = "t" . $TaskID . "-user" . ($i + 1);
-                    $password = $username;
-                    switch ($Info['passwords']) {
-                        case "easy":
-                            $password = $pwList[$password_indexes[$i]];
-                            $n = mt_rand(0, 999);
-                            $password .= str_pad($n, 3, '0', STR_PAD_LEFT);
-                            break;
-
-                        case "difficult":
-                            $password = password_generate();
-                            break;
-                    }
-
-                    $data = [
-                        "project" => $ProjectID,
-                        "task" => $TaskID,
-                        "username" => $username,
-                        "password" => $password,
-                        "educator" => 0,
-                        "data" => json_encode(["name" => "", "disabled" => false])
-                    ];
-
-                    $query = queryinsert("users", $data);
-                    $result = $mysqli->query($query);
+                if ($EditID) {
+                    $TaskID = $EditID;
+                }
+                else {
+                    $TaskID = $mysqli->insert_id;
                 }
 
                 @include("tasks/" . $InputData['type'] . "/_add.php");

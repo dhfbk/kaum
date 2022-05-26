@@ -58,3 +58,6 @@ if (!$CheckOnly) {
         }
     }
 }
+
+unset($Info['type_info']['custom_ch']);
+unset($Info['type_info']['custom_gr']);

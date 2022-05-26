@@ -1,6 +1,74 @@
 <?php
 
-$creenderAllowedExtensions = ["jpeg", "jpg", "png"];
+$creenderAllowedExtensions = [
+    "jpeg" => "image/jpg",
+    "jpg" => "image/jpg",
+    "png" => "image/png"
+];
+
+function creender_getPictureList($onlyID = false, $replaceID = false) {
+    global $mysqli;
+
+    $ret = [];
+    if (isLogged()) {
+        $RowTask = checkTask($_SESSION['creenderTask']);
+        $RowUser = find("users", $_SESSION['Login'], "Unable to find user");
+        $cluster = 0;
+    }
+    else {
+        checkStudentLogin();
+        $RowTask = checkTask();
+        checkTaskAvailability($RowTask['id']);
+        $RowUser = find("users", $_SESSION['StudentLogin'], "Unable to find user");
+        $cluster = $RowUser['data']['rc_cluster'];
+    }
+    $query = "SELECT c.*
+        FROM creender_ds_task_cluster c
+        WHERE c.task = '{$RowTask['id']}' AND c.cluster = '{$cluster}'
+            AND c.id NOT IN (
+                SELECT dtc_id FROM creender_annotations
+                    WHERE user = '{$RowUser['id']}' AND deleted = '0'
+            )
+        ORDER BY c.id";
+    $result = $mysqli->query($query);
+    if (!$result) {
+        dieWithError("Error in querying database");
+    }
+    while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+        if ($onlyID) {
+            if ($replaceID) {
+                $ret[$row['row']] = $row[$onlyID];
+            }
+            else {
+                $ret[] = $row[$onlyID];
+            }
+        }
+        else {
+            if ($replaceID) {
+                $ret[$row['row']] = $row;
+            }
+            else {
+                $ret[] = $row;
+            }
+        }
+    }
+    return $ret;
+}
+
+function creender_getTasksByProject($projectID) {
+    global $mysqli;
+
+    $ret = [];
+    $query = "SELECT * FROM tasks
+        WHERE tool = 'creender'
+            AND closed = '0' AND deleted = '0'
+            AND project_id = '{$projectID}'";
+    $result = $mysqli->query($query);
+    while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+        $ret[$row['id']] = $row['name'];
+    }
+    return $ret;
+}
 
 function creender_getPartsInfo($longID) {
     $first_part = substr($longID, 0, strlen($longID) - 3);

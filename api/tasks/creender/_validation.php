@@ -16,7 +16,7 @@ foreach ($Datasets as $dataset) {
     }
 }
 $validation_rules['annotations'] = "required|min:1|max:" . $Info['students'];
-$validation_rules['photos_educator'] = "required|min:0";
+// $validation_rules['photos_educator'] = "required|min:0";
 $validation_rules['comment'] = "required";
 $validation_rules['answer'] = "required";
 $validation_rules['description'] = "required";
