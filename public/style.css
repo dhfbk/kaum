@@ -12,3 +12,7 @@
     color: black;
     padding-right: 10px;
 }
+
+table.table-nowrap td {
+    white-space: nowrap;
+}
