@@ -1,27 +1,27 @@
 <template>
-    <p>{{ datasets }}</p>
+<!--    <p>{{ datasets }}</p>-->
     <div class="row">
         <div class="col-12">
             <div class="alert alert-warning">
                 The task information cannot be updated at a later time.
             </div>
         </div>
-        <div class="col-md-6 mb-3">
-            <label class="form-label" for="annotationsPerInstance">Annotations per instance:</label>
-            <input v-model="values.type_info['annotations']" name="annotations" class="form-control"
-                   id="annotationsPerInstance"
-                   type="number" min="1" :max="values.students"
-                   placeholder="Number of annotations" required/>
-            <div class="invalid-feedback">Number of annotations is required and must be > 0.</div>
-        </div>
-        <div class="col-md-6 mb-3">
-            <label class="form-label" for="photosPerEducator">Photos in educator profile:</label>
-            <input v-model="values.type_info['photos_educator']" name="photos_educator" class="form-control"
-                   id="photosPerEducator"
-                   type="number" min="1"
-                   placeholder="Number of photos for educator profiles" required/>
-            <div class="invalid-feedback">Number of photos for educator is required and must be > 0.</div>
-        </div>
+        <!--        <div class="col-md-6 mb-3">-->
+        <!--            <label class="form-label" for="annotationsPerInstance">Annotations per instance:</label>-->
+        <!--            <input v-model="values.type_info['annotations']" name="annotations" class="form-control"-->
+        <!--                   id="annotationsPerInstance"-->
+        <!--                   type="number" min="1" :max="values.students"-->
+        <!--                   placeholder="Number of annotations" required/>-->
+        <!--            <div class="invalid-feedback">Number of annotations is required and must be > 0.</div>-->
+        <!--        </div>-->
+        <!--        <div class="col-md-6 mb-3">-->
+        <!--            <label class="form-label" for="photosPerEducator">Photos in educator profile:</label>-->
+        <!--            <input v-model="values.type_info['photos_educator']" name="photos_educator" class="form-control"-->
+        <!--                   id="photosPerEducator"-->
+        <!--                   type="number" min="1"-->
+        <!--                   placeholder="Number of photos for educator profiles" required/>-->
+        <!--            <div class="invalid-feedback">Number of photos for educator is required and must be > 0.</div>-->
+        <!--        </div>-->
         <div class="col-12 col-md-6 mb-3">
             <label class="form-label" for="descriptionArea">Question text:</label>
             <textarea v-model="values.type_info['description']"
@@ -41,16 +41,15 @@
             <div class="invalid-feedback">Choice question required.</div>
         </div>
         <div class="col-12 col-md-6 mb-3">
-            <label class="form-label" for="commentArea">Comment question:</label>
-            <textarea v-model="values.type_info['comment']"
-                      name="comment" class="form-control"
-                      id="commentArea" rows="3"
-                      required>
-            </textarea>
-            <div class="invalid-feedback">Comment question required.</div>
-        </div>
-
-        <div class="col-12 col-md-6 mb-3">
+            <div class="mb-3">
+                <label class="form-label" for="commentArea">Comment question:</label>
+                <textarea v-model="values.type_info['comment']"
+                          name="comment" class="form-control"
+                          id="commentArea" rows="3"
+                          required>
+                </textarea>
+                <div class="invalid-feedback">Comment question required.</div>
+            </div>
             <div class="form-check">
                 <input class="form-check-input" type="checkbox" v-model="values.type_info['do_not_ask_for_comment']"
                        id="commentCheck">
@@ -66,6 +65,17 @@
                     The comment is mandatory
                 </label>
             </div>
+        </div>
+
+        <div class="col-12 col-md-6 mb-3">
+            <div class="mb-3">
+                <label class="form-label" for="annotationsPerInstance">Annotations per instance:</label>
+                <input v-model="values.type_info['annotations']" name="annotations" class="form-control"
+                       id="annotationsPerInstance"
+                       type="number" min="1" :max="values.students"
+                       placeholder="Number of annotations" required/>
+                <div class="invalid-feedback">Number of annotations is required and must be > 0.</div>
+            </div>
             <div class="form-check">
                 <input class="form-check-input" type="checkbox" v-model="values.type_info['no_show_question']"
                        id="noCheck">
@@ -78,6 +88,13 @@
                        id="noDelayCheck">
                 <label class="form-check-label" for="noDelayCheck">
                     Do not use delay
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" v-model="values.type_info['no_dblclick']"
+                       id="noDblClickCheck">
+                <label class="form-check-label" for="noDblClickCheck">
+                    Do not ask for double click
                 </label>
             </div>
             <div class="form-check">
@@ -194,6 +211,7 @@ async function updateChoices() {
         "params": {
             "action": "task",
             "sub": "listChoices",
+            "project_id": route.params.id,
             "type": "creender",
             ...updateAxiosParams()
         }
@@ -234,7 +252,7 @@ async function updateDatasets() {
             console.log(reason);
         })
         .then(() => {
-            // creenderLoading.value = false;
+            creenderLoading.value = false;
         });
 }
 
@@ -251,9 +269,9 @@ onBeforeMount(function () {
     if (!values.value['type_info']['description']) {
         values.value['type_info']['description'] = store.state.options.creender_default_question;
     }
-    if (!values.value['type_info']['photos_educator']) {
-        values.value['type_info']['photos_educator'] = store.state.options.creender_photos_educator;
-    }
+    // if (!values.value['type_info']['photos_educator']) {
+    //     values.value['type_info']['photos_educator'] = store.state.options.creender_photos_educator;
+    // }
     if (!values.value['type_info']['annotations']) {
         values.value['type_info']['annotations'] = store.state.options.task_default_annotations;
     }
@@ -275,7 +293,7 @@ onMounted(async function () {
 
     await updateDatasets();
     await updateChoices();
-    creenderLoading.value = false;
+    // creenderLoading.value = false;
 })
 </script>
 

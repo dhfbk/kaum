@@ -1,27 +1,26 @@
 <template>
-    <h1>
+    <h1 class="display-1">
         {{ title }}
     </h1>
-    <ProjectForm :valuesProp="values" @submit="submit" :buttonDisabled="buttonDisabled"/>
+    <ProjectForm :valuesProp="values" @submit="submit" @back="back" :buttonDisabled="buttonDisabled"/>
 </template>
 
 <script setup>
-import {defineProps, inject, onMounted, ref} from 'vue'
+import {inject, onMounted, ref} from 'vue'
 import ProjectForm from "@/components/ProjectForm.vue"
 import {useStore} from 'vuex'
-import {useRouter} from 'vue-router';
+import {useRoute, useRouter} from 'vue-router';
 
 const store = useStore();
 const router = useRouter();
+const route = useRoute();
 
-const props = defineProps({
-    action: String
-});
 const axios = inject('axios')
 const updateAxiosParams = inject('updateAxiosParams');
 
 const values = ref({
     educators: store.state.options.project_default_educators,
+    language: store.state.options.project_default_language
     // students: store.state.options.project_default_students,
     // passwords: store.state.options.project_default_complexity
 });
@@ -29,6 +28,10 @@ const title = ref("");
 
 const showModalWindow = inject('showModalWindow');
 const buttonDisabled = ref(false);
+
+function back() {
+    router.push("/projects");
+}
 
 function submit(v) {
     buttonDisabled.value = true;
@@ -53,7 +56,7 @@ function submit(v) {
 }
 
 onMounted(function () {
-    if (props.action == "add") {
+    if (route.meta.action === "add") {
         title.value = "Insert new project";
     }
 });

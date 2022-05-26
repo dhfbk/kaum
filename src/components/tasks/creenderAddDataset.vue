@@ -151,7 +151,6 @@ function addDataset() {
         signal: abortController.value.signal
     })
         .then((response) => {
-            console.log(response.data);
             if (response.data.result === "OK") {
                 showModalWindow("Dataset added successfully");
                 form.classList.remove('was-validated');

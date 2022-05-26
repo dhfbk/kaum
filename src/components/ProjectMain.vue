@@ -4,184 +4,190 @@
         Loading
     </p>
     <template v-else>
-        <div class="row">
-            <div class="col-md-9">
-                <h1>{{ projectInfo.name }}</h1>
+        <div class="row align-items-baseline">
+            <div class="col">
+                <h1 class="display-1">{{ projectInfo.name }}</h1>
             </div>
-            <div class="col-md-3 text-end" v-if="store.state.loggedAdmin">
-                <button class="btn btn-warning btn-sm" @click="goBack()">
-                    Back to project list
-                </button>
+        </div>
+        <div class="row align-items-baseline">
+            <div class="col" v-if="store.state.loggedAdmin">
+                <p>
+                    {{ $t("project.status").capitalize() }}:
+                    <project-badge :p="projectInfo"></project-badge>
+                </p>
+                <project-buttons :p="projectInfo" :inside="true"
+                                 @update="updateProject"></project-buttons>
+                <PicButton :always-text="true" @click="goBack"
+                           :text="$t('project.back').capitalize()" color="warning" icon="arrow-90deg-up"/>
+
             </div>
         </div>
         <template v-if="store.state.loggedAdmin">
-            <div class="row mt-5">
-                <div class="col-md-9">
-                    <h2>
-                        Educators
+            <div class="row mt-5 align-items-baseline">
+                <div class="col-9">
+                    <h2 class="display-2">
+                        {{ $t("educator.plur").capitalize() }}
                     </h2>
                 </div>
-                <div class="col-md-3 text-end">
-                    <!--       <button class="btn btn-primary btn-sm" @click="this.$router.push('/projects/new')">
-                            <i class="bi bi-file-earmark-plus"></i> Add educator
-                          </button> -->
+                <div class="col-3 text-end" v-if="store.state.loggedAdmin">
+                    <PicButton :no-margin="true" :text="$t('educator.new').capitalize()" color="primary"
+                               icon="file-earmark-plus" @click="addEducator"></PicButton>
                 </div>
             </div>
             <p v-if="projectInfo.educators.length == 0">
-                No educators
+                {{ $t('educator.no').capitalize() }}
             </p>
-            <table v-else class="table">
-                <thead>
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Username</th>
-                    <th scope="col">Name</th>
-                    <th scope="col">E-mail</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr v-for="e in projectInfo.educators" :key="updateTotal + '_' + e.id" class="align-middle">
-                    <th scope="row">{{ e.id }}</th>
-                    <td>{{ e.username }}</td>
-                    <td><span class="dark-enable" :data-username="e.username" :id="e.username + '_change_name'"
-                        data-title="Edit name">{{
-                            e.name
-                        }}
-                    </span></td>
-                    <td><span class="dark-enable" :data-username="e.username" :id="e.username + '_change_email'"
-                        data-title="Edit e-mail address">{{
-                            e.email
-                        }}
-                    </span></td>
-                    <td v-if="e.disabled"><span class="badge bg-danger">Disabled</span></td>
-                    <td v-else><span class="badge bg-success">Enabled</span></td>
-                    <td>
-                        <PicButton v-if="!e.disabled" @click="toggleUser(e.id)" text="Disable" color="warning"
-                                   icon="x-circle" :disabled="userLoading.has(e.id)"/>
-                        <PicButton v-else @click="toggleUser(e.id)" text="Enable" color="warning" icon="brightness-high"
-                                   :disabled="userLoading.has(e.id)"/>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+            <div class="table-responsive" v-else>
+                <table class="table table-nowrap">
+                    <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Username</th>
+                        <th scope="col">{{ $t('name').capitalize() }}</th>
+                        <th scope="col">E-mail</th>
+                        <th scope="col">{{ $t('status').capitalize() }}</th>
+                        <th scope="col">{{ $t('action.plur').capitalize() }}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr v-for="e in projectInfo.educators" :key="updateTotal + '_' + e.id" class="align-middle">
+                        <th scope="row">{{ e.id }}</th>
+                        <td>{{ e.username }}</td>
+                        <td>
+                            <span class="dark-enable" :data-username="e.username" :id="e.username + '_change_name'"
+                                  data-title="Edit name">{{ e.name }}</span>
+                        </td>
+                        <td>
+                            <span class="dark-enable" :data-username="e.username" :id="e.username + '_change_email'"
+                                  data-title="Edit e-mail address">{{ e.email }}</span>
+                        </td>
+                        <td>
+                            <span v-if="e.disabled"
+                                  class="badge bg-danger">{{ $t("user.disabled").capitalize() }}</span>
+                            <span v-else class="badge bg-success">{{ $t("user.active").capitalize() }}</span>
+                        </td>
+                        <td>
+                            <PicButton v-if="!e.disabled" @click="toggleUser(e.id)"
+                                       :text="$t('action.disable').capitalize()" color="warning"
+                                       icon="x-circle" :disabled="userLoading.has(e.id)"/>
+                            <PicButton v-else @click="toggleUser(e.id)" :text="$t('action.enable').capitalize()"
+                                       color="warning"
+                                       icon="brightness-high"
+                                       :disabled="userLoading.has(e.id)"/>
+                            <PicButton @click="resetEducatorPassword(e.id, e.username)"
+                                       :text="$t('action.reset_password').capitalize()"
+                                       color="dark" icon="key"/>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </template>
 
-        <div class="row mt-5">
-            <div class="col-md-9">
-                <h2>
-                    Tasks
+        <div class="row mt-5 align-items-baseline">
+            <div class="col-9">
+                <h2 class="display-2">
+                    {{ $t("task.plur").capitalize() }}
                 </h2>
             </div>
-            <div class="col-md-3 text-end">
-                <button class="btn btn-primary btn-sm" @click="addTask()">
-                    <i class="bi bi-file-earmark-plus"></i> Add task
-                </button>
+            <div class="col-3 text-end" v-if="projectInfo.confirmed">
+                <PicButton :no-margin="true" :text="$t('task.new').capitalize()" color="primary"
+                           icon="file-earmark-plus" @click="addTask()"></PicButton>
             </div>
         </div>
-        <p v-if="projectInfo.tasks.length === 0">
-            No tasks yet
-        </p>
-        <table v-else class="table">
-            <thead>
-            <tr>
-                <th scope="col">#</th>
-                <th scope="col">Type</th>
-                <th scope="col">Label</th>
-                <th scope="col">Students</th>
-                <th scope="col">Status</th>
-                <th scope="col">Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr v-for="e in projectInfo.tasks" :key="e.id" class="align-middle">
-                <th scope="row">{{ e.id }}</th>
-                <td>{{ e.tool }}</td>
-                <td>{{ e.name }}</td>
-                <td>{{ e.students }}</td>
-                <td v-if="e.closed"><span class="badge bg-dark">Closed</span></td>
-                <td v-else-if="e.disabled"><span class="badge bg-danger">Disabled</span></td>
-                <td v-else><span class="badge bg-success">Enabled</span></td>
-                <td>
-                    <PicButton @click="enterTask(e.id)" text="Manage" color="success" icon="box-arrow-in-right"/>
-                    <PicButton @click="addTask(e.id)" text="Clone" color="secondary" icon="file-earmark-break"/>
-                    <template v-if="!e.closed">
-                        <PicButton v-if="!e.disabled" @click="toggleTask(e.id)" text="Disable" color="warning"
-                                   icon="x-circle" :disabled="taskLoading.has(e.id)"/>
-                        <PicButton v-else @click="toggleTask(e.id)" text="Enable" color="warning" icon="brightness-high"
-                                   :disabled="taskLoading.has(e.id)"/>
-
-                        <PicButton @click="getUsersPasswords(e.id)" text="User passwords" color="info" icon="key"/>
-                        <PicButton v-if="e.disabled" :disabled="taskLoading.has(e.id)" @click="closeTask(e.id)"
-                                   text="Close" color="dark" icon="door-closed-fill"/>
-                    </template>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+        <template v-if="projectInfo.confirmed">
+            <p v-if="projectInfo.tasks.length === 0">
+                {{ $t("task.no") }}
+            </p>
+            <div v-else class="table-responsive">
+                <table class="table table-nowrap">
+                    <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">{{ $t("tool").capitalize() }}</th>
+                        <th scope="col">{{ $t("name").capitalize() }}</th>
+                        <th scope="col">{{ $t("student.plur").capitalize() }}</th>
+                        <th scope="col">{{ $t("status").capitalize() }}</th>
+                        <th scope="col">{{ $t("action.plur").capitalize() }}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr v-for="e in projectInfo.tasks" :key="e.id" class="align-middle">
+                        <th scope="row">{{ e.id }}</th>
+                        <td>
+                            <img :src="`${publicPath}/img/tasks/${e.tool}.png`" :alt="e.tool" :title="e.tool"
+                                 height="20"/>
+                            <span class="ms-2 badge bg-primary">{{ e.tool }}</span>
+                        </td>
+                        <td>{{ e.name }}</td>
+                        <td>{{ e.students }}</td>
+                        <td>
+                            <task-badge :e="e"></task-badge>
+                        </td>
+                        <td>
+                            <task-buttons @update="updateProject" @clone-task="addTask" @edit="editTask"
+                                          :id="id" :e="e" :inside="false"></task-buttons>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </template>
+        <div v-else>
+            You need to confirm the project to manage the tasks.
+        </div>
     </template>
 </template>
 
 <script setup>
 import {defineProps, ref, defineEmits, onMounted, inject, nextTick} from "vue";
 import {useStore} from "vuex";
+import {useRouter} from "vue-router";
 
 import PicButton from "@/components/objects/PicButton";
-import {useRoute, useRouter} from "vue-router";
+import ProjectButtons from "@/components/objects/ProjectButtons";
 import LoadingSpinner from "@/components/objects/LoadingSpinner";
 import DarkEditable from "@/dark-editable";
+import TaskButtons from "@/components/objects/TaskButtons";
+import TaskBadge from "@/components/objects/TaskBadge";
+import ProjectBadge from "@/components/objects/ProjectBadge";
+import {useI18n} from "vue-i18n";
 
 const showModalWindow = inject('showModalWindow');
 const axios = inject('axios');
 const updateAxiosParams = inject('updateAxiosParams');
+const publicPath = process.env.BASE_URL;
 
 const store = useStore();
 
-const emit = defineEmits(['addTask']);
+const emit = defineEmits(['addTask', 'editTask']);
 const props = defineProps({
     id: {
         type: String
     }
 });
-const id = ref(props.id);
 
 const basicLoading = ref(true);
 const projectInfo = ref({});
-const taskLoading = ref(new Set());
 const userLoading = ref(new Set());
+const addEducatorLoading = ref(false);
 
 // Force reload of dark-editable
 const updateTotal = ref(0);
 
 const router = useRouter();
-const route = useRoute();
+const {t} = useI18n();
 
 function goBack() {
     router.push('/projects');
 }
 
-function getUsersPasswords(taskID) {
-    let params = {
-        "action": "taskPasswords",
-        "project_id": id.value,
-        "id": taskID,
-        ...updateAxiosParams()
-    };
-    let usp = new URLSearchParams(params).toString();
-    window.open(axios.defaults.baseURL + "?" + usp).focus();
+function addTask(cloneID) {
+    emit("addTask", cloneID);
 }
 
-function enterTask(taskID) {
-    router.push('/project/' + route.params.id + '/' + taskID)
-}
-
-function closeTask(id) {
-    taskAction(id, "closeTask");
-}
-
-function toggleTask(id) {
-    taskAction(id, "taskToggleAvailability");
+function editTask(taskID) {
+    emit("editTask", taskID);
 }
 
 function toggleUser(id) {
@@ -199,10 +205,16 @@ function toggleUser(id) {
         });
 }
 
-function taskAction(id, action) {
-    taskLoading.value.add(id);
-    axios.post("?", {"action": action, id: id, ...updateAxiosParams()})
-        .then(() => {
+function resetEducatorPassword(id, username) {
+    userLoading.value.add(id);
+    axios.post("?", {"action": "educatorResetPassword", id: id, project_id: props.id, ...updateAxiosParams()})
+        .then((response) => {
+            let text = `<p>Password reset successfully.</p>
+                    <p>Username: ${username}<br />Password: ${response.data.password}</p>`;
+            if (projectInfo.value.confirmed) {
+                text += "<p>This is the last time you can see this password, save it in a safe place.</p>";
+            }
+            showModalWindow(text);
             updateProject();
         })
         .catch((reason) => {
@@ -210,20 +222,38 @@ function taskAction(id, action) {
             showModalWindow(debugText);
         })
         .then(() => {
-            taskLoading.value.delete(id);
+            userLoading.value.delete(id);
         });
-
 }
 
-function addTask(cloneID) {
-    emit("addTask", cloneID);
+function addEducator() {
+    addEducatorLoading.value = true;
+    axios.post("?", {"action": "educatorAdd", id: props.id, ...updateAxiosParams()})
+        .then((response) => {
+            if (response.data.result === "OK") {
+                let text = `<p>New educator created.</p>
+                    <p>Username: ${response.data.username}<br />Password: ${response.data.password}</p>`;
+                if (projectInfo.value.confirmed) {
+                    text += "<p>This is the last time you can see this password, save it in a safe place.</p>";
+                }
+                showModalWindow(text);
+            }
+            updateProject();
+        })
+        .catch((reason) => {
+            let debugText = reason.response.statusText + " - " + reason.response.data.error;
+            showModalWindow(debugText);
+        })
+        .then(() => {
+            addEducatorLoading.value = false;
+        });
 }
 
 function updateProject() {
     updateTotal.value++;
     axios.get("?", {
         "params": {
-            "action": "projectInfo", "id": id.value, ...updateAxiosParams()
+            "action": "projectInfo", "id": props.id, ...updateAxiosParams()
         }
     })
         .then(async (response) => {
@@ -242,6 +272,7 @@ function updateProject() {
                 const u = new URLSearchParams(params).toString();
                 new DarkEditable(d, {
                     type: 'text',
+                    emptytext: t('empty').capitalize(),
                     pk: d.dataset.username,
                     url: axios.defaults.baseURL + "?" + u,
                     ajaxOptions: {

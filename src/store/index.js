@@ -2,6 +2,7 @@ import {createStore} from 'vuex'
 
 export default createStore({
     state: {
+        language: "en",
         loggedIn: false,
         loggedAdmin: false,
         options: {},
@@ -9,6 +10,10 @@ export default createStore({
     },
     getters: {},
     mutations: {
+        setLanguage(state, lang) {
+            state.language = lang;
+            localStorage.setItem('language', lang);
+        },
         sessionOnly(state, payload) {
             localStorage.setItem('php_sess_id', payload.sess_id);
             state.loggedAdmin = payload.admin;

@@ -22,6 +22,16 @@
                         <a class="nav-link" href="#" @click="logout()">Logout</a>
                     </li>
                 </ul>
+                <div class="d-flex">
+                    <label for="langSelect" class="col-form-label me-3">
+                        <i class="bi bi-globe2"></i>
+                    </label>
+                    <select @change="changeLang" class="form-select" v-model="$i18n.locale" id="langSelect">
+                        <option v-for="(lang, i) in langs" :key="`Lang${i}`" :value="lang">
+                            {{ lang }}
+                        </option>
+                    </select>
+                </div>
             </div>
         </div>
     </nav>
@@ -32,11 +42,19 @@ import {inject} from 'vue'
 import {useStore} from 'vuex'
 import {useRouter} from 'vue-router';
 
+import i18n from '../i18n.js';
+
+const langs = i18n.global.availableLocales;
+
 const axios = inject('axios')
 const updateAxiosParams = inject('updateAxiosParams');
 const store = useStore();
 const router = useRouter();
 const publicPath = process.env.BASE_URL;
+
+function changeLang() {
+    store.commit("setLanguage", i18n.global.locale.value);
+}
 
 function logout() {
     // No comment...

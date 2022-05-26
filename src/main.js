@@ -13,6 +13,13 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 // import 'vanillajs-datepicker/dist/css/datepicker.css'
 // import 'vanillajs-datepicker/dist/css/datepicker-bs5.css'
 
+Object.defineProperty(String.prototype, 'capitalize', {
+    value: function() {
+        return this.charAt(0).toUpperCase() + this.slice(1);
+    },
+    enumerable: false
+});
+
 const app = createApp(App)
     .use(store)
     .use(router)

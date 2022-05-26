@@ -1,7 +1,7 @@
 <template>
-    <p>{{ values }}</p>
-    <h1>
-        {{ props.title }}
+<!--    <p>{{ values }}</p>-->
+    <h1 class="display-1">
+        {{ title }}
     </h1>
     <p v-if="cloneText" class="text-muted">
         <LoadingSpinner v-show="loadingClone"/>
@@ -80,11 +80,11 @@
                                     <span class="input-group-text d-md-flex d-none">From</span>
                                     <Datepicker class="form-control" id="dr1"
                                                 v-model="values.time.start_date" format="dd/MM/yyyy"
-                                                autoApply :enableTimePicker="false"></Datepicker>
+                                                autoApply :enableTimePicker="false" :clearable="false" :utc="true"></Datepicker>
                                     <span class="input-group-text">to</span>
                                     <Datepicker class="form-control" id="dr1"
                                                 v-model="values.time.end_date" format="dd/MM/yyyy"
-                                                autoApply :enableTimePicker="false"></Datepicker>
+                                                autoApply :enableTimePicker="false" :clearable="false" :utc="true"></Datepicker>
                                 </div>
                             </div>
                         </div>
@@ -185,15 +185,13 @@ const route = useRoute();
 const axios = inject('axios');
 const updateAxiosParams = inject("updateAxiosParams");
 const cloneText = ref("");
+const title = ref("");
 
 const typeOptions = inject('typeOptions');
 const formComponents = inject('formComponents');
 
 const emit = defineEmits(['submit', 'cancel', 'back']);
 const props = defineProps({
-    title: {
-        type: String
-    },
     valuesProp: {
         type: Object
     },
@@ -240,20 +238,25 @@ function copyValuesForClonation(o1, o2, tiLabels) {
     o1.type = o2.type;
     o1.students = o2.students;
     o1.passwords = o2.passwords;
-    o1.time = o2.time;
+    o1.automatic_timing = o2.automatic_timing;
+    if (o2.time !== undefined) {
+        o1.time = o2.time;
+    }
 
     for (let l of tiLabels) {
-        console.log("Replacing " + l + ": " + o1.type_info[l] + " => " + o2.type_info[l]);
         o1.type_info[l] = o2.type_info[l];
     }
-    console.log(o1);
-    console.log(o2);
-    console.log(tiLabels);
 }
 
 onMounted(async function () {
+    if (route.meta.action === 'edit') {
+        title.value = "Edit task";
+    }
+    else {
+        title.value = "New task";
+    }
     if (route.params.cloneID) {
-        cloneText.value = "Getting data to clone...";
+        cloneText.value = "Getting data...";
         loadingClone.value = true;
         axios.get("?", {
             "params": {
@@ -267,7 +270,12 @@ onMounted(async function () {
                 copyValuesForClonation(values.value, response.data.info.data, response.data.clone_values);
             })
             .finally(function () {
-                cloneText.value = "Clone from task " + route.params.cloneID;
+                if (route.meta.action !== 'edit') {
+                    cloneText.value = "Clone from task " + route.params.cloneID;
+                }
+                else {
+                    cloneText.value = "Editing task " + route.params.cloneID;
+                }
                 loadingClone.value = false;
             });
     }

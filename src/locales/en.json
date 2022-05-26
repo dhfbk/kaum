@@ -1,4 +1,65 @@
 {
-  "message": "hello i18n !!",
-  "about": "This is an about page"
+    "name": "name",
+    "empty": "empty",
+    "language_short": "lang",
+    "status": "status",
+    "loading": "loading",
+    "closed": "closed",
+    "tool": "tool",
+    "action": {
+        "sing": "action",
+        "plur": "actions",
+        "manage": "manage",
+        "confirm": "confirm",
+        "edit": "edit",
+        "disable": "disable",
+        "enable": "enable",
+        "user_passwords": "users passwords",
+        "edu_passwords": "educators passwords",
+        "close": "close",
+        "clone": "clone",
+        "delete": "delete",
+        "reset_password": "password reset"
+    },
+    "project": {
+        "sing": "project",
+        "plur": "projects",
+        "status": "project status",
+        "list": "projects",
+        "no": "no projects yet",
+        "new": "add project",
+        "unconfirmed": "unconfirmed",
+        "active": "active",
+        "disabled": "disabled",
+        "back": "back to project list"
+    },
+    "user": {
+        "active": "active",
+        "disabled": "disabled",
+        "username": "username"
+    },
+    "educator": {
+        "sing": "educator",
+        "plur": "educators",
+        "no": "no educators",
+        "new": "add educator"
+    },
+    "student": {
+        "sing": "student",
+        "plur": "students",
+        "no": "no students"
+    },
+    "task": {
+        "confirm_edit": "Are you sure? Once you confirm the task, you cannot modify it any more. This action cannot be undone.",
+        "status": "task status",
+        "new": "add task",
+        "sing": "task",
+        "plur": "tasks",
+        "no": "no tasks yet",
+        "unconfirmed": "unconfirmed",
+        "active": "active",
+        "disabled": "disabled",
+        "closed": "closed",
+        "back": "back to project"
+    }
 }

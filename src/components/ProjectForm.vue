@@ -2,12 +2,18 @@
     <div class="my-3">
         <form id="projectForm" class="needs-validation" novalidate @submit.stop.prevent="submit">
             <div class="row">
-                <div class="mb-3 col-md-9">
+                <div class="mb-3 col-md-6">
                     <label class="form-label" for="projectName">Project name</label>
                     <input v-model="values.name" :minlength="store.state.options.project_name_minlength"
                            name="name" class="form-control"
                            id="projectName" type="text" placeholder="Project name" required/>
                     <div class="invalid-feedback">Project name must be more than 3 characters long.</div>
+                </div>
+                <div class="mb-3 col-md-3">
+                    <label class="form-label" for="languageSelect">Language</label>
+                    <select class="form-select" aria-label="Language" v-model="values.language">
+                        <option v-for="lang in languages" :key="lang" :value="lang">{{ lang }}</option>
+                    </select>
                 </div>
                 <div class="mb-3 col-md-3">
                     <label class="form-label" for="numberOfEducators">Number of educators</label>
@@ -34,6 +40,8 @@
             </div>
             <div class="text-end mt-md-5">
                 <button :disabled="buttonDisabled" class="btn btn-primary btn-lg" type="submit">Submit</button>
+                <button :disabled="buttonDisabled" class="btn btn-warning btn-lg ms-3" @click.prevent="back()">Back
+                </button>
             </div>
         </form>
     </div>
@@ -44,8 +52,9 @@ import {defineEmits, defineProps, ref} from 'vue'
 import {useStore} from 'vuex'
 
 const store = useStore();
+let languages = store.state.options.languages.split(",");
 
-const emit = defineEmits(['submit']);
+const emit = defineEmits(['submit', 'back']);
 const props = defineProps({
     valuesProp: {
         type: Object
@@ -55,7 +64,12 @@ const props = defineProps({
     }
 });
 const values = ref(props.valuesProp);
+
 // const buttonDisabled = ref(props.buttonDisabled);
+
+function back() {
+    emit('back');
+}
 
 function submit(event) {
     let {srcElement: form} = event;

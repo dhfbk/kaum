@@ -1,9 +1,8 @@
 <template>
-    <template v-if="route.meta.action === 'add'">
+    <template v-if="route.meta.action === 'add' || route.meta.action === 'edit'">
         <TaskForm :formLoadingPercent="formLoadingPercent"
                   :disableSubmit="formLoading"
                   :valuesProp="getInitialValues()"
-                  title="Add task"
                   @submit="submitNewTask"
                   @cancel="cancel"
                   @back="back"
@@ -11,11 +10,11 @@
     </template>
 
     <template v-else-if="route.meta.action === 'list'">
-        <ProjectMain :id="route.params.id" @addTask="addTask"/>
+        <ProjectMain :id="route.params.id" @addTask="addTask" @editTask="editTask"/>
     </template>
 
     <template v-else-if="route.meta.action === 'task'">
-        <TaskMain :id="route.params.id" :task="route.params.task"></TaskMain>
+        <TaskMain :id="route.params.id" :task="route.params.task" @addTask="addTask"></TaskMain>
     </template>
 </template>
 
@@ -44,6 +43,17 @@ const today = new Date();
 const final_day = new Date();
 final_day.setDate(today.getDate() + Number(store.state.options.task_default_days_duration));
 
+function editTask(taskID) {
+    if (taskID === undefined) {
+        showModalWindow("Task ID not found");
+        return;
+    }
+
+    router.push({
+        name: "projectIdEditTask",
+        params: {cloneID: taskID, id: route.params.id}
+    });
+}
 function addTask(cloneID) {
     if (cloneID === undefined) {
         router.push({
@@ -136,6 +146,11 @@ async function submitNewTask(v) {
             formData.append(k + "[]", f);
         }
     }
+
+    if (route.meta.action === 'edit') {
+        formData.append("edit_id", route.params.cloneID);
+    }
+
     formLoading.value = true;
     axios.post("?", formData, {
         headers: {
@@ -147,12 +162,17 @@ async function submitNewTask(v) {
         signal: abortController.value.signal
     })
         .then((response) => {
-            console.log(response.data);
+            // console.log(response.data);
             if (response.data.result === "OK") {
                 // resetInitialValues();
                 router.push("/project/" + route.params.id);
                 // activate();
-                showModalWindow("Task added successfully");
+                if (route.meta.action === 'edit') {
+                    showModalWindow("Task modified successfully");
+                }
+                else {
+                    showModalWindow("Task added successfully");
+                }
             } else {
                 showModalWindow(response.data.error);
             }

@@ -1,4 +1,65 @@
 {
-  "message": "ciao i18n !!",
-  "about": "Questa è una pagina informativa"
+    "name": "nome",
+    "empty": "non presente",
+    "language_short": "lingua",
+    "status": "stato",
+    "loading": "caricamento in corso",
+    "closed": "chiuso",
+    "tool": "strumento",
+    "action": {
+        "sing": "azione",
+        "plur": "azioni",
+        "manage": "gestisci",
+        "confirm": "conferma",
+        "edit": "modifica",
+        "disable": "disabilita",
+        "enable": "abilita",
+        "user_passwords": "password utenti",
+        "edu_passwords": "password educatori",
+        "close": "chiudi",
+        "clone": "clona",
+        "delete": "elimina",
+        "reset_password": "reset password"
+    },
+    "project": {
+        "sing": "progetto",
+        "plur": "progetti",
+        "status": "stato progetto",
+        "list": "elenco progetti",
+        "no": "non ci sono progetti",
+        "new": "nuovo progetto",
+        "unconfirmed": "non confermato",
+        "active": "attivo",
+        "disabled": "disattivato",
+        "back": "torna all'elenco progetti"
+    },
+    "user": {
+        "active": "attivo",
+        "disabled": "disattivato",
+        "username": "username"
+    },
+    "educator": {
+        "sing": "educatore",
+        "plur": "educatori",
+        "no": "non ci sono educatori",
+        "new": "nuovo educatore"
+    },
+    "student": {
+        "sing": "studente",
+        "plur": "studenti",
+        "no": "non ci sono studenti"
+    },
+    "task": {
+        "confirm_edit": "Attenzione! Una volta confermato, il task non può più essere modificato. Questa azione non può essere annullata.",
+        "status": "stato attività",
+        "new": "nuova attività",
+        "sing": "attività",
+        "plur": "attività",
+        "no": "non ci sono attività",
+        "unconfirmed": "non confermata",
+        "active": "attiva",
+        "disabled": "disattivata",
+        "closed": "chiusa",
+        "back": "torna al progetto"
+    }
 }

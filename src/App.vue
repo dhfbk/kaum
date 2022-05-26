@@ -38,8 +38,9 @@ import {useStore} from 'vuex'
 import LoginForm from '@/components/LoginForm.vue'
 import ModalWindow from '@/components/objects/ModalWindow.vue'
 import NavBar from '@/components/NavBar.vue'
+import i18n from '@/i18n.js';
 
-const showModal = ref(false);
+let showModal = ref(false);
 const modalMessage = ref("");
 
 const mainLoaded = ref(false);
@@ -92,6 +93,9 @@ onMounted(async function () {
     await loadUserInfo();
     await loadTypeOptions();
     mainLoaded.value = true;
+    if (localStorage.getItem('language')) {
+        i18n.global.locale.value = localStorage.getItem('language');
+    }
 });
 
 function submit({username, password}) {

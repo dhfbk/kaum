@@ -4,16 +4,27 @@
         Loading
     </p>
     <template v-else>
-        <h1>
-            Task: {{ taskInfo.name }}
+        <h1 class="display-1">
+            <small class="text-muted">
+                {{ taskInfo.project_info.name }}
+                <i class="bi bi-arrow-right-short"></i>
+            </small>
+            {{ taskInfo.name }}
         </h1>
-        <h2>
-            Project: {{ taskInfo.project_info.name }}
-        </h2>
+        <div>
+            <p>
+                {{ $t("task.status").capitalize() }}:
+                <task-badge :e="taskInfo"></task-badge>
+            </p>
+            <task-buttons @update="updateTask" @clone-task="addTask" :id="id" :e="taskInfo"
+                          :inside="true"></task-buttons>
+            <PicButton :always-text="true" @click="goBack"
+                       :text="$t('task.back').capitalize()" color="warning" icon="arrow-90deg-up"/>
+        </div>
         <div class="row mt-5">
             <div class="col-md-9">
-                <h2>
-                    Students
+                <h2 class="display-2">
+                    {{ $t('student.plur').capitalize() }}
                 </h2>
             </div>
             <div class="col-md-3 text-end">
@@ -23,54 +34,60 @@
             </div>
         </div>
         <p v-if="taskInfo.students.length == 0">
-            No students
+            {{ $t('student.no').capitalize() }}
         </p>
-        <table v-else class="table">
-            <thead>
-            <tr>
-                <th scope="col">#</th>
-                <th scope="col">Username</th>
-                <th scope="col">Name</th>
-                <th scope="col">Status</th>
-                <th scope="col">Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr v-for="e in taskInfo.students" :key="updateTotal + '_' + e.id" class="align-middle">
-                <th scope="row">{{ e.id }}</th>
-                <td>{{ e.username }}</td>
-                <td><span class="dark-enable" :data-username="e.username" :id="e.username + '_change_name'" data-title="Edit name">{{
-                        e.data.name
-                    }}</span></td>
-                <td v-if="e.data.disabled"><span class="badge bg-danger">Disabled</span></td>
-                <td v-else><span class="badge bg-success">Enabled</span></td>
-                <td>
-                    <PicButton v-if="!e.data.disabled" @click="toggleUser(e.id)" text="Disable" color="warning"
-                               icon="x-circle" :disabled="userLoading.has(e.id)"/>
-                    <PicButton v-else @click="toggleUser(e.id)" text="Enable" color="warning" icon="brightness-high"
-                               :disabled="userLoading.has(e.id)"/>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-
+        <div v-else class="table-responsive">
+            <table class="table table-nowrap">
+                <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">{{ $t('user.username').capitalize() }}</th>
+                    <th scope="col">{{ $t('name').capitalize() }}</th>
+                    <th scope="col">{{ $t('status').capitalize() }}</th>
+                    <th scope="col">{{ $t('action.plur').capitalize() }}</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="e in taskInfo.students" :key="updateTotal + '_' + e.id" class="align-middle">
+                    <th scope="row">{{ e.id }}</th>
+                    <td>{{ e.username }}</td>
+                    <td><span class="dark-enable" :data-username="e.username" :id="e.username + '_change_name'"
+                              data-title="Edit name">{{
+                            e.data.name
+                        }}</span></td>
+                    <td>
+                        <span v-if="e.data.disabled" class="badge bg-danger">{{
+                                $t('user.disabled').capitalize()
+                            }}</span>
+                        <span v-else class="badge bg-success">{{ $t('user.active').capitalize() }}</span>
+                    </td>
+                    <td>
+                        <PicButton v-if="!e.data.disabled" @click="toggleUser(e.id)"
+                                   :text="$t('action.disable').capitalize()" color="warning"
+                                   icon="x-circle" :disabled="userLoading.has(e.id)"/>
+                        <PicButton v-else @click="toggleUser(e.id)" :text="$t('action.enable').capitalize()"
+                                   color="warning" icon="brightness-high"
+                                   :disabled="userLoading.has(e.id)"/>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
         <component :is="component" :values="taskInfo"/>
 
-        <div class="row mt-5">
-            <div class="col text-end">
-                <button class="btn btn-warning btn-lg ms-3" @click.prevent="back()">Back</button>
-            </div>
-        </div>
     </template>
 </template>
 
 <script setup>
 
 // import {useRoute} from "vue-router";
-import {defineAsyncComponent, shallowRef, ref, onMounted, defineProps, inject, nextTick} from "vue";
+import {defineAsyncComponent, shallowRef, ref, onMounted, defineProps, inject, nextTick, defineEmits} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import LoadingSpinner from "@/components/objects/LoadingSpinner";
 import PicButton from "@/components/objects/PicButton";
+import TaskButtons from "@/components/objects/TaskButtons";
+import TaskBadge from "@/components/objects/TaskBadge";
+import {useI18n} from "vue-i18n";
 
 const DarkEditable = require('@/dark-editable.js').default;
 
@@ -80,6 +97,7 @@ const route = useRoute();
 const axios = inject('axios');
 const updateAxiosParams = inject('updateAxiosParams');
 const showModalWindow = inject('showModalWindow');
+const {t} = useI18n();
 
 const component = shallowRef(null);
 const basicLoading = ref(true);
@@ -99,6 +117,12 @@ const props = defineProps({
     }
 });
 
+const emit = defineEmits(['addTask']);
+
+function addTask(cloneID) {
+    emit("addTask", cloneID);
+}
+
 function toggleUser(id) {
     userLoading.value.add(id);
     axios.post("?", {"action": "userToggleAvailability", id: id, ...updateAxiosParams()})
@@ -115,7 +139,7 @@ function toggleUser(id) {
 }
 
 
-function back() {
+function goBack() {
     router.push("/project/" + route.params.id);
 }
 
@@ -153,6 +177,7 @@ async function updateTask() {
                 const u = new URLSearchParams(params).toString();
                 new DarkEditable(d, {
                     type: 'text',
+                    emptytext: t('empty').capitalize(),
                     pk: d.dataset.username,
                     url: axios.defaults.baseURL + "?" + u,
                     ajaxOptions: {
