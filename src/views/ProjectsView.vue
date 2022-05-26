@@ -59,9 +59,6 @@ import ProjectBadge from "@/components/objects/ProjectBadge";
 
 const router = useRouter();
 
-// @ is an alias to /src
-// import HelloWorld from '@/components/HelloWorld.vue'
-
 const axios = inject('axios');
 const updateAxiosParams = inject('updateAxiosParams');
 const showModalWindow = inject('showModalWindow');
