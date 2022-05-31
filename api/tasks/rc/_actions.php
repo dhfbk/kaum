@@ -37,11 +37,11 @@ switch ($InputData['sub']) {
         // $ret['id'] = $channelID;
         break;
 
-    case "test":
-        $user = new \ATDev\RocketChat\Users\User("t5-user1");
-        $i = $user->info();
-        $ret['info'] = $i;
-        break;
+    // case "test":
+    //     $user = new \ATDev\RocketChat\Users\User("t5-user1");
+    //     $i = $user->info();
+    //     $ret['info'] = $i;
+    //     break;
 
     case "sos":
         $ret['input'] = $_REQUEST;

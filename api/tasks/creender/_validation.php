@@ -4,6 +4,7 @@ if (!$RowProject) {
     exit();
 }
 
+// No files in Creender
 unset($Info['type_info']['files']);
 
 $Datasets = creender_listDatasets($RowProject['id']);
@@ -21,7 +22,11 @@ $validation_rules['comment'] = "required";
 $validation_rules['answer'] = "required";
 $validation_rules['description'] = "required";
 
-array_walk_recursive($Info['type_info'], function(&$v) { $v = trim($v); });
+array_walk_recursive($Info['type_info'], function(&$v) {
+    if (is_string($v)) {
+        $v = trim($v);
+    }
+});
 
 // $Info['type_info'] = array_map("trim", $Info['type_info']);
 $validation_rules['choices'] = "required|min:2";

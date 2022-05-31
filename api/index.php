@@ -500,6 +500,7 @@ switch ($Action) {
         unset($_SESSION['Login']);
         unset($_SESSION['StudentLogin']);
         unset($_SESSION['Admin']);
+        unset($_SESSION['TaskInfo']);
         break;
 
     case "taskTypes":

@@ -221,13 +221,10 @@ function checkTask($id = 0, $userID = 0, $projectID = 0) {
     return $Row;
 }
 
-function checkTaskAvailability($id) {
-    $Row = find("tasks", $id, "Unable to find task");
+function rawCheckTaskAvailability($Row) {
     if ($Row['deleted']) {
         dieWithError("Unable to find task");
     }
-    $RowProject = checkProjectAvailability($Row['project_id']);
-    $Row['project_info'] = $RowProject;
     if (!$Row['confirmed']) {
         dieWithError("Task is unconfirmed");
     }
@@ -241,6 +238,13 @@ function checkTaskAvailability($id) {
         // check if time is ok
     }
     return $Row;
+}
+
+function checkTaskAvailability($id) {
+    $Row = find("tasks", $id, "Unable to find task");
+    $RowProject = checkProjectAvailability($Row['project_id']);
+    $Row['project_info'] = $RowProject;
+    return rawCheckTaskAvailability($Row);
 }
 
 function checkProjectAvailability($id, $Row = []) {

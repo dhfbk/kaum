@@ -1,5 +1,8 @@
 <?php
 
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
 switch ($InputData['sub']) {
     // case "getTasks":
     //     checkLogin();
@@ -17,22 +20,72 @@ switch ($InputData['sub']) {
     //     $_SESSION['creenderTask'] = $_REQUEST['task'];
     //     break;
 
+    case "enterDemo":
+        $RowTask = checkTaskAvailability($_REQUEST['id']);
+        if (empty($RowTask['data']['type_info']['enable_demo_mode'])) {
+            dieWithError("This task is not available in demo mode");
+        }
+        if ($RowTask['data']['type_info']['demo_password'] != $_REQUEST['password']) {
+            dieWithError("Wrong login");
+        }
+
+        if (!isset($_SESSION['TaskInfo'])) {
+            $_SESSION['TaskInfo'] = [];
+        }
+        $_SESSION['TaskInfo']['creender_demo'] = $_REQUEST['id'];
+        $ret['session_id'] = session_id();
+        break;
+
+    case "listDemo":
+        $query = "SELECT t.*
+            FROM `tasks` t
+            LEFT JOIN projects p ON t.project_id = p.id
+            WHERE p.deleted = '0' AND p.disabled = '0' AND p.confirmed = '1'
+                AND t.deleted = '0' AND t.closed = '0' AND t.confirmed = '1'
+                AND t.tool = 'creender'";
+        $result = $mysqli->query($query);
+        $ret['data'] = [];
+        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+            $row['data'] = json_decode($row['data'], true);
+            if (empty($row['data']['type_info']['enable_demo_mode'])) {
+                continue;
+            }
+            $name = "T{$row['id']} - {$row['name']}";
+            $toPass = ["id" => $row['id'], "name" => $name];
+            $ret['data'][] = $toPass;
+        }
+        break;
+
     case "getInfo":
-        checkStudentLogin();
-        $RowTask = checkTask();
+        $ret['demo'] = false;
+        if (!isStudentLogged() && !empty($_SESSION['TaskInfo']['creender_demo'])) {
+            $RowTask = checkTaskAvailability($_SESSION['TaskInfo']['creender_demo']);
+            $ret['demo'] = true;
+        }
+        else {
+            checkStudentLogin();
+            $RowTask = checkTask();
+        }
         require("_login.php");
         break;
 
     case "nextPhoto":
+        $ret['next'] = null;
+        if (!isStudentLogged() && !empty($_SESSION['TaskInfo']['creender_demo'])) {
+            $ret['next'] = ["row" => -1];
+            return;
+        }
         checkStudentLogin();
         $list = creender_getPictureList();
-        $ret['next'] = null;
         if (count($list)) {
             $ret['next'] = $list[0];
         }
         break;
 
     case "saveAnnotation":
+        if (!isStudentLogged() && !empty($_SESSION['TaskInfo']['creender_demo'])) {
+            return;
+        }
         checkStudentLogin();
         $list = creender_getPictureList(false, true);
         $PictureID = addslashes($_REQUEST['id']);
@@ -42,6 +95,7 @@ switch ($InputData['sub']) {
         $TaskInfo = checkTask($list[$PictureID]['task']);
         $Data = $_REQUEST['data'];
         $dataToSave = [];
+        $dataToSave['report'] = $Data['value'] == -2;
         $dataToSave['needComment'] = $Data['needComment'];
         $dataToSave['comment'] = $Data['comment'];
 
@@ -81,20 +135,25 @@ switch ($InputData['sub']) {
         break;
 
     case "getPhoto":
-        checkStudentLogin();
-        $list = creender_getPictureList("row");
-        $PictureID = addslashes($_REQUEST['id']);
-        if (!in_array($PictureID, $list)) {
-            dieWithError("Unable to load image");
+        if (!isStudentLogged() && !empty($_SESSION['TaskInfo']['creender_demo'])) {
+            // todo: query for test photos (photos from datasets with test flag not included in the task)
+            $filePath = "img/demo-picture.png";
         }
-        $baseFolder = $Options['creender_images_path'];
-        $FileInfo = find("creender_rows", $PictureID, "Unable to find picture");
+        else {
+            checkStudentLogin();
+            $list = creender_getPictureList("row");
+            $PictureID = addslashes($_REQUEST['id']);
+            if (!in_array($PictureID, $list)) {
+                dieWithError("Unable to load image");
+            }
+            $baseFolder = $Options['creender_images_path'];
+            $FileInfo = find("creender_rows", $PictureID, "Unable to find picture");
 
-        $longID = str_pad($PictureID, 4, "0", STR_PAD_LEFT);
-        $partInfo = creender_getPartsInfo($longID);
-        $filePath = $baseFolder . "/" . $FileInfo['dataset_id'] . "/" . $partInfo['f'] . "/" . $partInfo['s'];
-        $ret['path'] = $FileInfo;
-        $FileInfo['content'] = json_decode($FileInfo['content'], true);
+            $longID = str_pad($PictureID, 4, "0", STR_PAD_LEFT);
+            $partInfo = creender_getPartsInfo($longID);
+            $filePath = $baseFolder . "/" . $FileInfo['dataset_id'] . "/" . $partInfo['f'] . "/" . $partInfo['s'];
+            $FileInfo['content'] = json_decode($FileInfo['content'], true);
+        }
         $mime = mime_content_type($filePath);
         // $parts = pathinfo($FileInfo['content']['basename']);
 
@@ -104,6 +163,63 @@ switch ($InputData['sub']) {
         $content = file_get_contents($filePath);
         echo $content;
         exit();
+        break;
+
+    case "exportResults":
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setCellValue('A1', 'Hello World !');
+        $sheet->getColumnDimension('A')->setAutoSize(true);
+
+        $filename = "out";
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="'.$filename.'.xlsx"');
+        header('Cache-Control: max-age=0');
+        http_response_code(200);
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit();
+        break;
+
+    case "taskResults":
+        checkLogin();
+        $Row = checkTask($_REQUEST['id']);
+
+        $ClusterInfo = [];
+        $query = "SELECT cluster, COUNT(*) num
+            FROM `creender_ds_task_cluster`
+            WHERE task = '{$Row['id']}'
+            GROUP BY cluster";
+        $result = $mysqli->query($query);
+        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+            $ClusterInfo[$row['cluster']] = $row['num'];
+        }
+
+        $UserInfo = [];
+        $query = "SELECT * FROM users
+            WHERE task = '{$Row['id']}' AND educator = '0' AND deleted = '0'";
+        $result = $mysqli->query($query);
+        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+            $row['data'] = json_decode($row['data'], true);
+            $thisUserInfo = [];
+            $thisUserInfo['cluster'] = $row['data']['rc_cluster'];
+            $thisUserInfo['annotated'] = 0;
+            $thisUserInfo['total'] = $ClusterInfo[$row['data']['rc_cluster']];
+            $UserInfo[$row['id']] = $thisUserInfo;
+        }
+
+        $query = "SELECT a.user, COUNT(*) num
+            FROM `creender_annotations` a
+            LEFT JOIN users u ON u.id = a.user
+            WHERE a.deleted = '0' AND u.task = '{$Row['id']}'
+                AND u.deleted = '0' AND u.educator = '0'
+            GROUP BY a.user;";
+        $result = $mysqli->query($query);
+        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+            $UserInfo[$row['user']]['annotated'] = $row['num'];
+        }
+
+        $ret['info'] = $UserInfo;
         break;
 
     case "listChoices":
