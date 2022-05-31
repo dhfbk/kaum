@@ -18,6 +18,16 @@
                     <li v-if="store.state.loggedAdmin">
                         <router-link to="/admin" class="nav-link">Task management</router-link>
                     </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Tools
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="/creender">Creender</a></li>
+                            <li><a class="dropdown-item" href="/hssh">High school superhero</a></li>
+                            <li><a class="dropdown-item" href="/chat">Rocket.Chat</a></li>
+                        </ul>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#" @click="logout()">Logout</a>
                     </li>
