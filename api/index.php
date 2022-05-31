@@ -315,6 +315,19 @@ switch ($Action) {
         exit();
         break;
 
+    case "projectDelete":
+        checkAdmin();
+        $Row = find("projects", $_REQUEST['id'], "Unable to find project");
+        if (!$Row['disabled']) {
+            dieWithError("Only disabled projects can be deleted");
+        }
+        $query = "UPDATE projects SET deleted = '1' WHERE id = '{$Row['id']}'";
+        $result = $mysqli->query($query);
+        if (!$result) {
+            dieWithError($mysqli->error);
+        }
+        break;
+
     case "projectToggleAvailability":
         checkAdmin();
         $Row = find("projects", $_REQUEST['id'], "Unable to find project");

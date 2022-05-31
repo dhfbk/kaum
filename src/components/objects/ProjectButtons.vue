@@ -2,19 +2,22 @@
     <PicButton :always-text="inside" v-if="!p.disabled && !inside" @click="enterProject(p.id)"
                :text="$t('action.manage').capitalize()" color="success" icon="box-arrow-in-right"/>
     <span v-if="!p.confirmed">
-                    <PicButton :always-text="inside" @click="confirmProject(p.id)"
-                               :text="$t('action.confirm').capitalize()" color="info" icon="check-circle" :disabled="loading"/>
-                    <PicButton :always-text="inside" @click="getPasswords(p.id)"
-                               :text="$t('action.edu_passwords').capitalize()" color="success" icon="key"/>
-                    </span>
+        <PicButton :always-text="inside" @click="confirmProject(p.id)"
+                   :text="$t('action.confirm').capitalize()" color="info" icon="check-circle"
+                   :disabled="loading"/>
+        <PicButton :always-text="inside" @click="getPasswords(p.id)"
+                   :text="$t('action.edu_passwords').capitalize()" color="success" icon="key"/>
+    </span>
     <span v-else>
-                    <PicButton :always-text="inside" v-if="!p.disabled" @click="toggleAvailability(p.id)"
-                               :text="$t('action.disable').capitalize()" color="warning" icon="x-circle" :disabled="loading"/>
-                    <PicButton :always-text="inside" v-else @click="toggleAvailability(p.id)"
-                               :text="$t('action.enable').capitalize()" color="warning" icon="brightness-high"
-                               :disabled="loading"/>
-                    </span>
-    <PicButton :always-text="inside" v-if="!inside" :text="$t('action.delete').capitalize()" color="danger" icon="trash"/>
+        <PicButton :always-text="inside" v-if="!p.disabled" @click="toggleAvailability(p.id)"
+                   :text="$t('action.disable').capitalize()" color="warning" icon="x-circle"
+                   :disabled="loading"/>
+        <PicButton :always-text="inside" v-else @click="toggleAvailability(p.id)"
+                   :text="$t('action.enable').capitalize()" color="warning" icon="brightness-high"
+                   :disabled="loading"/>
+    </span>
+    <PicButton :always-text="inside" v-if="!inside && p.disabled" :text="$t('action.delete').capitalize()"
+               @click="deleteProject(p.id)" color="danger" icon="trash"/>
 
 </template>
 
@@ -49,6 +52,12 @@ function enterProject(id) {
 function confirmProject(id) {
     if (confirm("Are you sure? This action cannot be undone")) {
         projectAction(id, "projectConfirm");
+    }
+}
+
+function deleteProject(id) {
+    if (confirm("Are you sure? This action cannot be undone")) {
+        projectAction(id, "projectDelete");
     }
 }
 
