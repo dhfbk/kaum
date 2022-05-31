@@ -56,7 +56,7 @@
                     <component :is="formComponents[values.type]" :values="values" :underValidation="underValidation"/>
                 </div>
             </div>
-            <div class="card mb-3">
+            <div class="card mb-3" v-show="store.state.options.use_temporal_settings && store.state.options.use_temporal_settings !== '0'">
                 <h5 class="card-header">Temporal settings</h5>
                 <div class="card-body">
                     <div class="row gy-3 mb-3">
