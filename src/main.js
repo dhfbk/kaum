@@ -6,7 +6,8 @@ import store from './store'
 import 'bootstrap';
 import axios from "./axios";
 
-import 'bootstrap/dist/css/bootstrap.min.css';
+import '@/index.scss';
+
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
 // todo: check because one needs to edit package.json

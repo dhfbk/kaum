@@ -1,5 +1,5 @@
 <template>
-<!--    <p>{{ datasets }}</p>-->
+    <!--    <p>{{ datasets }}</p>-->
     <div class="row">
         <div class="col-12">
             <div class="alert alert-warning">
@@ -65,6 +65,13 @@
                     The comment is mandatory
                 </label>
             </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" v-model="values.type_info['no_show_question']"
+                       id="noCheck">
+                <label class="form-check-label" for="noCheck">
+                    Show choices when user clicks 'No'
+                </label>
+            </div>
         </div>
 
         <div class="col-12 col-md-6 mb-3">
@@ -77,24 +84,17 @@
                 <div class="invalid-feedback">Number of annotations is required and must be > 0.</div>
             </div>
             <div class="form-check">
-                <input class="form-check-input" type="checkbox" v-model="values.type_info['no_show_question']"
-                       id="noCheck">
-                <label class="form-check-label" for="noCheck">
-                    Show choices on 'No'
-                </label>
-            </div>
-            <div class="form-check">
                 <input class="form-check-input" type="checkbox" v-model="values.type_info['no_delay']"
                        id="noDelayCheck">
                 <label class="form-check-label" for="noDelayCheck">
-                    Do not use delay
+                    Buttons are immediately available to users
                 </label>
             </div>
             <div class="form-check">
                 <input class="form-check-input" type="checkbox" v-model="values.type_info['no_dblclick']"
                        id="noDblClickCheck">
                 <label class="form-check-label" for="noDblClickCheck">
-                    Do not ask for double click
+                    One click is enough for the user to confirm
                 </label>
             </div>
             <div class="form-check">
@@ -104,6 +104,23 @@
                     Allow multiple choices
                 </label>
             </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" v-model="values.type_info['enable_demo_mode']"
+                       id="enableDemo">
+                <label class="form-check-label" for="enableDemo">
+                    Enable demo mode
+                </label>
+            </div>
+
+            <div v-if="values.type_info['enable_demo_mode']" class="row row-cols-lg-auto g-3 align-items-center mt-1">
+                <div class="col-auto">
+                    <label for="demoPassword" class="col-form-label">Password:</label>
+                </div>
+                <div class="col-auto">
+                    <password-label id="demoPassword" :password="values.type_info['demo_password']"></password-label>
+                </div>
+            </div>
+
         </div>
 
         <div class="col-12 mt-3 mb-1">
@@ -147,11 +164,11 @@
                                 <input v-model="values.type_info['dataset_' + index]" class="form-control"
                                        type="number" min="0" :max="dataset.num"
                                        required/>
-                                <button class="btn btn-outline-secondary" type="button"
+                                <button class="btn btn-grey" type="button"
                                         @click="values.type_info['dataset_' + index] = 0">
                                     <i class="bi bi-x"></i>
                                 </button>
-                                <button class="btn btn-outline-secondary" type="button"
+                                <button class="btn btn-grey" type="button"
                                         @click="values.type_info['dataset_' + index] = dataset.num">
                                     <i class="bi bi-check-all"></i>
                                 </button>
@@ -185,6 +202,7 @@ import {useRoute} from "vue-router";
 import {useStore} from "vuex";
 import CreenderChoice from "@/components/tasks/creenderChoice";
 import CreenderAddDataset from "@/components/tasks/creenderAddDataset";
+import PasswordLabel from "@/components/objects/PasswordLabel";
 
 const axios = inject('axios');
 const updateAxiosParams = inject('updateAxiosParams');

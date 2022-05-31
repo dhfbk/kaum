@@ -18,7 +18,7 @@
                 <project-buttons :p="projectInfo" :inside="true"
                                  @update="updateProject"></project-buttons>
                 <PicButton :always-text="true" @click="goBack"
-                           :text="$t('project.back').capitalize()" color="warning" icon="arrow-90deg-up"/>
+                           :text="$t('project.back').capitalize()" color="yellow" icon="arrow-90deg-up"/>
 
             </div>
         </div>

@@ -1,0 +1,108 @@
+// United 5.1.3
+// Bootswatch
+
+$theme: "united" !default;
+
+//
+// Color system
+//
+
+$ka-blue: #5b7fbf;
+$ka-orange: #f0800e;
+$ka-yellow: #ffeb61;
+
+$white:    #fff !default;
+$gray-100: #f8f9fa !default;
+$gray-200: #e9ecef !default;
+$gray-300: #dee2e6 !default;
+$gray-400: #ced4da !default;
+$gray-500: #adb5bd !default;
+$gray-600: #6c757d !default;
+$gray-700: #495057 !default;
+$gray-800: #343a40 !default;
+$gray-900: #212529 !default;
+$black:    #000 !default;
+
+$blue:    #007bff !default;
+$indigo:  #6610f2 !default;
+$purple:  #772953 !default;
+$pink:    #e83e8c !default;
+$red:     #df382c !default;
+$orange:  #e95420 !default;
+$yellow:  #efb73e !default;
+$green:   #38b44a !default;
+$teal:    #20c997 !default;
+$cyan:    #17a2b8 !default;
+
+$primary:       $ka-blue !default;
+//$secondary:     $gray-500 !default;
+$success:       $green !default;
+$info:          $cyan !default;
+$warning:       $ka-orange !default;
+$danger:        $red !default;
+//$light:         $gray-200 !default;
+$dark:          $gray-700 !default;
+
+$min-contrast-ratio:   1.8 !default;
+
+// Body
+
+//$body-color:                $gray-800 !default;
+
+// Fonts
+
+$font-light: 'PT Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol" !default;
+$font-caption: 'PT Sans Caption', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol" !default;
+$font-headings: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol" !default;
+
+// stylelint-disable-next-line value-keyword-case
+$font-family-sans-serif: $font-caption;
+$input-btn-font-family: $font-light;
+$headings-font-family: $font-headings;
+// Tables
+
+//$table-dark-bg:               $dark !default;
+//$table-dark-border-color:     darken($dark, 5%) !default;
+
+// Header size
+
+$display-font-sizes: (
+        1: 4rem,
+        2: 3rem,
+        3: 2.5rem,
+        4: 2.2rem,
+        5: 2rem,
+        6: 1.5rem
+) !default;
+
+$headings-color: $gray-800;
+
+@import 'bootstrap/scss/bootstrap.scss';
+
+// United 5.1.3
+// Bootswatch
+
+
+// Variables
+
+$web-font-path: "https://fonts.googleapis.com/css2?family=Montserrat:wght@500&family=Nunito&family=PT+Sans+Caption:wght@400;700&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" !default;
+@if $web-font-path {
+  @import url($web-font-path);
+}
+
+// Indicators
+
+.badge {
+  &.bg-light {
+    color: $body-color;
+  }
+}
+
+.btn-yellow {
+  background-color: $ka-yellow;
+}
+
+.btn-grey {
+  background-color: $gray-200;
+  border-color: $input-border-color;
+}

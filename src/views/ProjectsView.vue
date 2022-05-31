@@ -121,7 +121,7 @@ function updateProjects() {
             //   modalMessage.value = reason.response.statusText;
             // }
         })
-        .finally(() => {
+        .then(() => {
             basicLoading.value = false;
         });
 }

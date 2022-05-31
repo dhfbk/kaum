@@ -7,7 +7,7 @@
     <PicButton :always-text="inside" v-if="!e.confirmed" @click="editTask(e.id)" :text="$t('action.edit').capitalize()" color="warning"
                icon="pencil" :disabled="loading"/>
 
-    <PicButton :always-text="inside" @click="cloneTask(e.id)" :text="$t('action.clone').capitalize()" color="secondary" icon="file-earmark-break"/>
+    <PicButton :always-text="inside" @click="cloneTask(e.id)" :text="$t('action.clone').capitalize()" color="yellow" icon="file-earmark-break"/>
     <template v-if="!e.closed && e.confirmed">
         <PicButton :always-text="inside" v-if="!e.disabled" @click="toggleTask(e.id)" :text="$t('action.disable').capitalize()" color="warning"
                    icon="x-circle" :disabled="loading"/>
@@ -77,7 +77,7 @@ function toggleTask(id) {
 }
 
 function confirmTask(id) {
-    if (confirm(t("confirm_edit"))) {
+    if (confirm(t("task.confirm_edit"))) {
         taskAction(id, "confirmTask");
     }
 }

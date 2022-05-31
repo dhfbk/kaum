@@ -19,7 +19,7 @@
             <task-buttons @update="updateTask" @clone-task="addTask" :id="id" :e="taskInfo"
                           :inside="true"></task-buttons>
             <PicButton :always-text="true" @click="goBack"
-                       :text="$t('task.back').capitalize()" color="warning" icon="arrow-90deg-up"/>
+                       :text="$t('task.back').capitalize()" color="yellow" icon="arrow-90deg-up"/>
         </div>
         <div class="row mt-5">
             <div class="col-md-9">
@@ -43,6 +43,7 @@
                     <th scope="col">#</th>
                     <th scope="col">{{ $t('user.username').capitalize() }}</th>
                     <th scope="col">{{ $t('name').capitalize() }}</th>
+                    <th v-for="(t, index) in additionalUserData.titles" :key="index">{{ t }}</th>
                     <th scope="col">{{ $t('status').capitalize() }}</th>
                     <th scope="col">{{ $t('action.plur').capitalize() }}</th>
                 </tr>
@@ -51,10 +52,11 @@
                 <tr v-for="e in taskInfo.students" :key="updateTotal + '_' + e.id" class="align-middle">
                     <th scope="row">{{ e.id }}</th>
                     <td>{{ e.username }}</td>
-                    <td><span class="dark-enable" :data-username="e.username" :id="e.username + '_change_name'"
-                              data-title="Edit name">{{
-                            e.data.name
-                        }}</span></td>
+                    <td>
+                        <span class="dark-enable" :data-username="e.username" :id="e.username + '_change_name'"
+                              data-title="Edit name">{{ e.data.name }}</span>
+                    </td>
+                    <td v-for="(obj, index) in additionalUserData.values" :key="index">{{ obj[e.id] }}</td>
                     <td>
                         <span v-if="e.data.disabled" class="badge bg-danger">{{
                                 $t('user.disabled').capitalize()
@@ -73,7 +75,7 @@
                 </tbody>
             </table>
         </div>
-        <component :is="component" :values="taskInfo"/>
+        <component :is="component" :values="taskInfo" :additionalData="additionalUserData"/>
 
     </template>
 </template>
@@ -102,6 +104,11 @@ const {t} = useI18n();
 const component = shallowRef(null);
 const basicLoading = ref(true);
 const taskInfo = ref({});
+
+const additionalUserData = ref({
+    "titles": [],
+    "values": []
+});
 
 // Force reload of dark-editable
 const updateTotal = ref(0);
