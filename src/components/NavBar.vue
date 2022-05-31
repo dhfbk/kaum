@@ -23,9 +23,9 @@
                             Tools
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="/creender">Creender</a></li>
-                            <li><a class="dropdown-item" href="/hssh">High school superhero</a></li>
-                            <li><a class="dropdown-item" href="/chat">Rocket.Chat</a></li>
+                            <li><a target="_blank" class="dropdown-item" href="/creender">Creender</a></li>
+                            <li><a target="_blank" class="dropdown-item" href="/hssh">High school superhero</a></li>
+                            <li><a target="_blank" class="dropdown-item" href="/chat">Rocket.Chat</a></li>
                         </ul>
                     </li>
                     <li class="nav-item">
