@@ -20,6 +20,9 @@
         <PicButton :always-text="inside" v-if="e.disabled" :disabled="loading" @click="closeTask(e.id)"
                    :text="$t('action.close').capitalize()" color="dark" icon="door-closed-fill"/>
     </template>
+    <PicButton :always-text="inside" v-if="!inside && (e.disabled || e.closed || !e.confirmed)" :text="$t('action.delete').capitalize()"
+               @click="deleteTask(e.id)" color="danger" icon="trash"/>
+
 </template>
 
 <script setup>
@@ -66,6 +69,12 @@ function getUsersPasswords(taskID) {
 
 function enterTask(taskID) {
     router.push('/project/' + route.params.id + '/' + taskID)
+}
+
+function deleteTask(id) {
+    if (confirm("Are you sure? This action cannot be undone")) {
+        taskAction(id, "taskDelete");
+    }
 }
 
 function closeTask(id) {

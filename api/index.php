@@ -522,6 +522,20 @@ switch ($Action) {
         $ret['types'] = $TaskTypes;
         break;
 
+    case "taskDelete":
+        $RowTask = checkTask($_REQUEST['id']);
+
+        // e.disabled || e.closed || !e.confirmed
+        if (!$RowTask['disabled'] && !$RowTask['closed'] && $RowTask['confirmed']) {
+            dieWithError("A task must be inactive to be deleted");
+        }
+        $query = "UPDATE tasks SET deleted = '1' WHERE id = '{$RowTask['id']}'";
+        $result = $mysqli->query($query);
+        if (!$result) {
+            dieWithError($mysqli->error);
+        }
+        break;
+
     case "taskToggleAvailability":
         $RowTask = checkTask($_REQUEST['id']);
         if (!$RowTask['confirmed']) {
