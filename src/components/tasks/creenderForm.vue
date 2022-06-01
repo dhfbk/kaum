@@ -1,5 +1,5 @@
 <template>
-    <!--    <p>{{ datasets }}</p>-->
+        <p>{{ values }}</p>
     <div class="row">
         <div class="col-12">
             <div class="alert alert-warning">
@@ -117,7 +117,8 @@
                     <label for="demoPassword" class="col-form-label">Password:</label>
                 </div>
                 <div class="col-auto">
-                    <password-label id="demoPassword" :password="values.type_info['demo_password']"></password-label>
+                    <password-label id="demoPassword" :password="values.type_info['demo_password']"
+                                    @change="updatePassword"></password-label>
                 </div>
             </div>
 
@@ -223,6 +224,11 @@ const props = defineProps({
 const values = ref(props.values);
 
 // console.log("Loaded!");
+
+function updatePassword(newPassword) {
+    values.value.type_info['demo_password'] = newPassword;
+    // console.log(newPassword);
+}
 
 async function updateChoices() {
     await axios.get("?", {
