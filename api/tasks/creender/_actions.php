@@ -177,7 +177,7 @@ switch ($InputData['sub']) {
         $sheet = $spreadsheet->getActiveSheet();
 
         $query = "SELECT a.id annotation_id, a.data, a.created_at, u.username, r.id picture_id, r.content, d.name
-            FROM `creender_annotations` a
+            FROM creender_annotations a
             LEFT JOIN users u ON u.id = a.user
             LEFT JOIN creender_ds_task_cluster dtc ON a.dtc_id = dtc.id
             LEFT JOIN creender_rows r ON r.id = dtc.row
@@ -227,7 +227,7 @@ switch ($InputData['sub']) {
             $sheet->setCellValue('H' . $i, $comment);
             $sheet->setCellValue('I' . $i, $row['created_at']);
             $sheet->getStyle('H' . $i)->getAlignment()->setWrapText(true);
-            
+
             $i++;
             // print_r($row);
         }
