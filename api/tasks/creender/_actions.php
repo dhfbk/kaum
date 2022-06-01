@@ -166,12 +166,83 @@ switch ($InputData['sub']) {
         break;
 
     case "exportResults":
+        checkLogin();
+        $Row = checkTask($_REQUEST['id']);
+        $choices = $Row['data']['type_info']['choices'];
+
+        // print_r($Row);
+        $isYesWithComment = empty($Row['data']['type_info']['no_show_question']);
+
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setCellValue('A1', 'Hello World !');
-        $sheet->getColumnDimension('A')->setAutoSize(true);
 
-        $filename = "out";
+        $query = "SELECT a.id annotation_id, a.data, a.created_at, u.username, r.id picture_id, r.content, d.name
+            FROM `creender_annotations` a
+            LEFT JOIN users u ON u.id = a.user
+            LEFT JOIN creender_ds_task_cluster dtc ON a.dtc_id = dtc.id
+            LEFT JOIN creender_rows r ON r.id = dtc.row
+            LEFT JOIN creender_datasets d ON d.id = r.dataset_id
+            WHERE u.task = '{$Row['id']}' AND a.deleted = '0'";
+        $result = $mysqli->query($query);
+
+        $sheet->setCellValue('A1', "Annotation ID");
+        $sheet->setCellValue('B1', "Username");
+        $sheet->setCellValue('C1', "Picture ID");
+        $sheet->setCellValue('D1', "Dataset name");
+        $sheet->setCellValue('E1', "File name");
+        $sheet->setCellValue('F1', "Answer");
+        $sheet->setCellValue('G1', "Types");
+        $sheet->setCellValue('H1', "Comment");
+        $sheet->setCellValue('I1', "Date/time");
+
+        $i = 2;
+        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+            $row['data'] = json_decode($row['data'], true);
+            $row['content'] = json_decode($row['content'], true);
+            $answer = "No";
+            if ($row['data']['report']) {
+                $answer = "Report";
+            }
+            if ($isYesWithComment xor !$row['data']['needComment']) {
+                $answer = "Yes";
+            }
+
+            $types = [];
+            if (!empty($row['data']['values'])) {
+                foreach ($row['data']['values'] as $value) {
+                    $types[] = $choices[$value];
+                }
+            }
+
+            $comment = $row['data']['comment'];
+            // $comment = str_replace("\n", "\n\r", $comment);
+
+            $sheet->setCellValue('A' . $i, intval($row['annotation_id']));
+            $sheet->setCellValue('B' . $i, $row['username']);
+            $sheet->setCellValue('C' . $i, intval($row['picture_id']));
+            $sheet->setCellValue('D' . $i, $row['name']);
+            $sheet->setCellValue('E' . $i, $row['content']['basename']);
+            $sheet->setCellValue('F' . $i, $answer);
+            $sheet->setCellValue('G' . $i, implode(", ", $types));
+            $sheet->setCellValue('H' . $i, $comment);
+            $sheet->setCellValue('I' . $i, $row['created_at']);
+            $sheet->getStyle('H' . $i)->getAlignment()->setWrapText(true);
+            
+            $i++;
+            // print_r($row);
+        }
+
+        $sheet->getColumnDimension('A')->setAutoSize(true);
+        $sheet->getColumnDimension('B')->setAutoSize(true);
+        $sheet->getColumnDimension('C')->setAutoSize(true);
+        $sheet->getColumnDimension('D')->setAutoSize(true);
+        $sheet->getColumnDimension('E')->setAutoSize(true);
+        $sheet->getColumnDimension('F')->setAutoSize(true);
+        $sheet->getColumnDimension('G')->setAutoSize(true);
+        $sheet->getColumnDimension('H')->setAutoSize(true);
+        $sheet->getColumnDimension('I')->setAutoSize(true);
+
+        $filename = "creender-results-t" . $Row['id'];
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="'.$filename.'.xlsx"');
         header('Cache-Control: max-age=0');
