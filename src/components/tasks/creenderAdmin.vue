@@ -33,6 +33,7 @@
                                 <th scope="col">#</th>
                                 <th scope="col">Name</th>
                                 <th scope="col">Records</th>
+                                <th scope="col">Demo</th>
                                 <th scope="col">Actions</th>
                             </tr>
                             </thead>
@@ -41,6 +42,14 @@
                                 <th scope="row">{{ d.id }}</th>
                                 <td>{{ d.name }}</td>
                                 <td>{{ d.num }}</td>
+                                <td>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" v-model="d.test"
+                                               @change="toggleDemo(d.id)" :id="'check_demo_' + d.id">
+                                    </div>
+                                </td>
+                                <!--                                <td v-if="d.test"><span class="badge bg-success"><i class="bi bi-check-lg"></i></span></td>-->
+                                <!--                                <td v-else><span class="badge bg-danger"><i class="bi bi-x-lg"></i></span></td>-->
                                 <td>
                                     <PicButton :text="$t('action.delete').capitalize()"
                                                @click="deleteDataset(d.id)" color="danger" icon="trash"/>
@@ -69,6 +78,30 @@ const updateAxiosParams = inject('updateAxiosParams');
 const creenderLoading = ref(true);
 const datasets = ref([]);
 const showModalWindow = inject('showModalWindow');
+
+function toggleDemo(id) {
+    document.getElementById('check_demo_' + id)?.setAttribute('disabled', '');
+    axios.post("?", {
+        "action": "task",
+        "sub": "toggleDemoDataset",
+        "type": "creender",
+        id: id,
+        ...updateAxiosParams()
+    })
+        .then((response) => {
+            console.log(response.data);
+            if (response.data.result === "OK") {
+                datasets.value[id].test = response.data.value;
+            }
+        })
+        .catch((reason) => {
+            let debugText = reason.response.statusText + " - " + reason.response.data.error;
+            showModalWindow(debugText);
+        })
+        .then(() => {
+            document.getElementById('check_demo_' + id)?.removeAttribute('disabled');
+        });
+}
 
 function deleteDataset(id) {
     if (confirm("Are you sure? This action cannot be undone")) {
@@ -104,7 +137,12 @@ async function updateDatasets() {
         }
     })
         .then((response) => {
-            datasets.value = response.data.datasets;
+            datasets.value = {};
+            for (let index in response.data.datasets) {
+                let d = response.data.datasets[index];
+                d['test'] = !!d['test'];
+                datasets.value[d.id] = d;
+            }
         })
         .catch((reason) => {
             console.log(reason);

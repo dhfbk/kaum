@@ -135,9 +135,26 @@ switch ($InputData['sub']) {
         break;
 
     case "getPhoto":
+        $baseFolder = $Options['creender_images_path'];
         if (!isStudentLogged() && !empty($_SESSION['TaskInfo']['creender_demo'])) {
-            // todo: query for test photos (photos from datasets with test flag not included in the task)
-            $filePath = "img/demo-picture.png";
+            $RowTask = checkTaskAvailability($_SESSION['TaskInfo']['creender_demo']);
+            $query = "SELECT r.*
+                FROM creender_rows r
+                LEFT JOIN creender_datasets d ON d.id = r.dataset_id
+                WHERE d.test = '1' AND d.deleted = '0' AND
+                    (d.project_id = '{$RowTask['project_id']}' OR d.task_id = '{$RowTask['id']}' OR
+                    (d.project_id IS NULL AND d.task_id IS NULL))
+                ORDER BY RAND()";
+            $result = $mysqli->query($query);
+            if ($result->num_rows) {
+                $row = $result->fetch_array(MYSQLI_ASSOC);
+                $longID = str_pad($row['id'], 4, "0", STR_PAD_LEFT);
+                $partInfo = creender_getPartsInfo($longID);
+                $filePath = $baseFolder . "/" . $row['dataset_id'] . "/" . $partInfo['f'] . "/" . $partInfo['s'];
+            }
+            else {
+                $filePath = "img/demo-picture.png";
+            }
         }
         else {
             checkStudentLogin();
@@ -146,13 +163,12 @@ switch ($InputData['sub']) {
             if (!in_array($PictureID, $list)) {
                 dieWithError("Unable to load image");
             }
-            $baseFolder = $Options['creender_images_path'];
             $FileInfo = find("creender_rows", $PictureID, "Unable to find picture");
 
             $longID = str_pad($PictureID, 4, "0", STR_PAD_LEFT);
             $partInfo = creender_getPartsInfo($longID);
             $filePath = $baseFolder . "/" . $FileInfo['dataset_id'] . "/" . $partInfo['f'] . "/" . $partInfo['s'];
-            $FileInfo['content'] = json_decode($FileInfo['content'], true);
+            // $FileInfo['content'] = json_decode($FileInfo['content'], true);
         }
         $mime = mime_content_type($filePath);
         // $parts = pathinfo($FileInfo['content']['basename']);
@@ -320,10 +336,30 @@ switch ($InputData['sub']) {
         $ret['datasets'] = creender_listDatasets($projectID);
         break;
 
+    case "toggleDemoDataset":
+        $RowDataset = find("creender_datasets", $_REQUEST['id'], "Unable to find dataset");
+        if ($RowDataset['deleted']) {
+            dieWithError("Dataset does not exist");
+        }
+        if (!isAdmin()) {
+            $RowUser = find("users", $UserID, "Unable to find user");
+            $RowProject = checkProject($RowUser['project'], $RowUser['id']);
+            if ($RowDataset['project_id'] != $RowProject['id']) {
+                dieWithError("You do not have permission to edit this dataset");
+            }
+        }
+        $query = "UPDATE creender_datasets SET test = NOT test WHERE id = '{$RowDataset['id']}'";
+        $result = $mysqli->query($query);
+        if (!$result) {
+            dieWithError($mysqli->error);
+        }
+        $ret['value'] = !$RowDataset['test'];
+        break;
+
     case "deleteDataset":
         $RowDataset = find("creender_datasets", $_REQUEST['id'], "Unable to find dataset");
         if ($RowDataset['deleted']) {
-            dieWithError("Dataset already deleted");
+            dieWithError("Dataset does not exist");
         }
         if (!isAdmin()) {
             $RowUser = find("users", $UserID, "Unable to find user");

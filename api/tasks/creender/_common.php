@@ -109,7 +109,7 @@ function creender_listDatasets($projectID = 0, $userID = 0) {
     else {
         $orUser = " OR user_id = '{$_SESSION['Login']}' ";
     }
-    $query = "SELECT d.id, d.name, COUNT(r.id) num
+    $query = "SELECT d.id, d.name, d.test, COUNT(r.id) num
         FROM creender_datasets d
         LEFT JOIN creender_rows r ON r.dataset_id = d.id
         WHERE (
