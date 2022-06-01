@@ -72,7 +72,8 @@ switch ($InputData['sub']) {
             LEFT JOIN hssh_ds_task_cluster dtc ON a.sentence = dtc.id
             LEFT JOIN hssh_rows r ON r.id = dtc.row
             LEFT JOIN hssh_datasets d ON d.id = r.dataset_id
-            WHERE u.task = '{$Row['id']}' AND a.deleted = '0'";
+            WHERE u.task = '{$Row['id']}' AND a.deleted = '0'
+            ORDER BY u.id";
         $result = $mysqli->query($query);
 
         $sheet->setCellValue('A1', "Annotation ID");
