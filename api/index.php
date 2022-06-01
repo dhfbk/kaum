@@ -1,5 +1,7 @@
 <?php
 
+ini_set("session.use_cookies", 0);
+
 header("Content-Type: application/json; charset=UTF-8");
 
 header("Access-Control-Max-Age: 3600");
