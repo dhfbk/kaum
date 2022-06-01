@@ -1,9 +1,89 @@
 <?php
 
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
 switch ($InputData['sub']) {
     case "listDatasets":
         $RowProject = checkProject($InputData['project_id']);
         $ret['datasets'] = hssh_listDatasets($RowProject['id']);
+        break;
+
+    case "exportResults":
+        checkLogin();
+        $Row = checkTask($_REQUEST['id']);
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $query = "SELECT a.id annotation_id, a.data, a.created_at, u.username,
+                r.id sentence_id, r.content, d.name, d.type
+            FROM hssh_annotations a
+            LEFT JOIN users u ON u.id = a.user
+            LEFT JOIN hssh_ds_task_cluster dtc ON a.sentence = dtc.id
+            LEFT JOIN hssh_rows r ON r.id = dtc.row
+            LEFT JOIN hssh_datasets d ON d.id = r.dataset_id
+            WHERE u.task = '{$Row['id']}' AND a.deleted = '0'";
+        $result = $mysqli->query($query);
+
+        $sheet->setCellValue('A1', "Annotation ID");
+        $sheet->setCellValue('B1', "Username");
+        $sheet->setCellValue('C1', "Sentence ID");
+        $sheet->setCellValue('D1', "Dataset name");
+        $sheet->setCellValue('E1', "Sentence");
+        $sheet->setCellValue('F1', "Actions");
+        $sheet->setCellValue('G1', "Date/time");
+
+        $i = 2;
+        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+            $row['data'] = json_decode($row['data'], true);
+            $tokens = hssh_getTokens($row['content']);
+
+            $actions = [];
+            if ($row['type'] == "gr") {
+                foreach ($row['data']['tokens'] as $index => $t) {
+                    if ($t == HSSH_True) {
+                        $actions[] = "Deleted: ({$index}) {$tokens[$index]}";
+                    }
+                }
+            }
+            else { // "ch"
+                foreach ($row['data']['tokens'] as $index => $t) {
+                    if ($t != HSSH_False) {
+                        $actions[] = "Replaced: ({$index}) {$tokens[$index]} => {$t}";
+                    }
+                }
+            }
+
+            $sheet->setCellValue('A' . $i, intval($row['annotation_id']));
+            $sheet->setCellValue('B' . $i, $row['username']);
+            $sheet->setCellValue('C' . $i, intval($row['sentence_id']));
+            $sheet->setCellValue('D' . $i, $row['name']);
+            $sheet->setCellValue('E' . $i, $row['content']);
+            $sheet->setCellValue('F' . $i, implode("\n", $actions));
+            $sheet->setCellValue('G' . $i, $row['created_at']);
+            $sheet->getStyle('F' . $i)->getAlignment()->setWrapText(true);
+
+            $i++;
+            // print_r($row);
+        }
+
+        $sheet->getColumnDimension('A')->setAutoSize(true);
+        $sheet->getColumnDimension('B')->setAutoSize(true);
+        $sheet->getColumnDimension('C')->setAutoSize(true);
+        $sheet->getColumnDimension('D')->setAutoSize(true);
+        $sheet->getColumnDimension('E')->setAutoSize(true);
+        $sheet->getColumnDimension('F')->setAutoSize(true);
+        $sheet->getColumnDimension('G')->setAutoSize(true);
+
+        $filename = "hssh-results-t" . $Row['id'];
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="'.$filename.'.xlsx"');
+        header('Cache-Control: max-age=0');
+        http_response_code(200);
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit();
         break;
 
     case "saveAnnotation":
