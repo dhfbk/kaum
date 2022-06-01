@@ -47,7 +47,8 @@
     "student": {
         "sing": "student",
         "plur": "students",
-        "no": "no students"
+        "no": "no students",
+        "list": "students list"
     },
     "task": {
         "confirm_edit": "Are you sure? Once you confirm the task, you cannot modify it any more. This action cannot be undone.",

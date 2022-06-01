@@ -47,7 +47,8 @@
     "student": {
         "sing": "studente",
         "plur": "studenti",
-        "no": "non ci sono studenti"
+        "no": "non ci sono studenti",
+        "list": "elenco studenti"
     },
     "task": {
         "confirm_edit": "Attenzione! Una volta confermato, il task non può più essere modificato. Questa azione non può essere annullata.",
