@@ -37,8 +37,8 @@
                 <div class="col-auto">
                     <div class="form-check">
                         <input v-model="saveValues.save" class="form-check-input no-validation-cb" type="checkbox"
-                               id="creenderSaveDataset">
-                        <label class="form-check-label" for="creenderSaveDataset">
+                               id="creenderSaveChoice">
+                        <label class="form-check-label" for="creenderSaveChoice">
                             Save dataset
                         </label>
                     </div>
