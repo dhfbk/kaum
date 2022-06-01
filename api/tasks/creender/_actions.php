@@ -258,7 +258,7 @@ switch ($InputData['sub']) {
 
         $ClusterInfo = [];
         $query = "SELECT cluster, COUNT(*) num
-            FROM `creender_ds_task_cluster`
+            FROM creender_ds_task_cluster
             WHERE task = '{$Row['id']}'
             GROUP BY cluster";
         $result = $mysqli->query($query);
@@ -280,11 +280,11 @@ switch ($InputData['sub']) {
         }
 
         $query = "SELECT a.user, COUNT(*) num
-            FROM `creender_annotations` a
+            FROM creender_annotations a
             LEFT JOIN users u ON u.id = a.user
             WHERE a.deleted = '0' AND u.task = '{$Row['id']}'
                 AND u.deleted = '0' AND u.educator = '0'
-            GROUP BY a.user;";
+            GROUP BY a.user";
         $result = $mysqli->query($query);
         while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
             $UserInfo[$row['user']]['annotated'] = $row['num'];
