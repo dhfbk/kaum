@@ -320,6 +320,25 @@ switch ($InputData['sub']) {
         $ret['datasets'] = creender_listDatasets($projectID);
         break;
 
+    case "deleteDataset":
+        $RowDataset = find("creender_datasets", $_REQUEST['id'], "Unable to find dataset");
+        if ($RowDataset['deleted']) {
+            dieWithError("Dataset already deleted");
+        }
+        if (!isAdmin()) {
+            $RowUser = find("users", $UserID, "Unable to find user");
+            $RowProject = checkProject($RowUser['project'], $RowUser['id']);
+            if ($RowDataset['project_id'] != $RowProject['id']) {
+                dieWithError("You do not have permission to delete this dataset");
+            }
+        }
+        $query = "UPDATE creender_datasets SET deleted = '1' WHERE id = '{$RowDataset['id']}'";
+        $result = $mysqli->query($query);
+        if (!$result) {
+            dieWithError($mysqli->error);
+        }
+        break;
+
     case "addDataset":
         checkLogin();
         $insertInfo = [];
