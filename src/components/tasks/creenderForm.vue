@@ -1,5 +1,5 @@
 <template>
-        <p>{{ values }}</p>
+    <!--        <p>{{ values }}</p>-->
     <div class="row">
         <div class="col-12">
             <div class="alert alert-warning">
