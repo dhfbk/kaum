@@ -9,6 +9,55 @@ switch ($InputData['sub']) {
         $ret['datasets'] = hssh_listDatasets($RowProject['id']);
         break;
 
+    case "taskResults":
+        checkLogin();
+        $Row = checkTask($_REQUEST['id']);
+
+        $ClusterInfo = ["ch" => [], "gr" => []];
+        $query = "SELECT c.cluster, d.type, COUNT(*) num
+            FROM hssh_ds_task_cluster c
+            LEFT JOIN hssh_rows r ON c.row = r.id
+            LEFT JOIN hssh_datasets d ON d.id = r.dataset_id
+            WHERE c.task = '{$Row['id']}'
+            GROUP BY c.cluster, d.type";
+        $result = $mysqli->query($query);
+        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+            $ClusterInfo[$row['type']][$row['cluster']] = $row['num'];
+        }
+
+        $UserInfo = [];
+        $query = "SELECT * FROM users
+            WHERE task = '{$Row['id']}' AND educator = '0' AND deleted = '0'";
+        $result = $mysqli->query($query);
+        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+            $row['data'] = json_decode($row['data'], true);
+            $thisUserInfo = [];
+            $thisUserInfo['cluster'] = $row['data']['rc_cluster'];
+            $thisUserInfo['annotations'] = ["ch" => [], "gr" => []];
+            $thisUserInfo['annotations']["ch"]['annotated'] = 0;
+            $thisUserInfo['annotations']["gr"]['annotated'] = 0;
+            $thisUserInfo['annotations']["ch"]['total'] = $ClusterInfo["ch"][$row['data']['rc_cluster']];
+            $thisUserInfo['annotations']["gr"]['total'] = $ClusterInfo["gr"][$row['data']['rc_cluster']];
+            $UserInfo[$row['id']] = $thisUserInfo;
+        }
+
+        $query = "SELECT a.user, d.type, COUNT(*) num
+            FROM hssh_annotations a
+            LEFT JOIN users u ON u.id = a.user
+            LEFT JOIN hssh_ds_task_cluster dtc ON a.sentence = dtc.id
+            LEFT JOIN hssh_rows r ON r.id = dtc.row
+            LEFT JOIN hssh_datasets d ON d.id = r.dataset_id
+            WHERE a.deleted = '0' AND u.task = '{$Row['id']}'
+                AND u.deleted = '0' AND u.educator = '0'
+            GROUP BY a.user, d.type";
+        $result = $mysqli->query($query);
+        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+            $UserInfo[$row['user']]['annotations'][$row['type']]['annotated'] = $row['num'];
+        }
+
+        $ret['info'] = $UserInfo;
+        break;
+
     case "exportResults":
         checkLogin();
         $Row = checkTask($_REQUEST['id']);

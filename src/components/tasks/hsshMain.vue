@@ -16,14 +16,17 @@
 
 <script setup>
 
-import {defineProps, inject} from "vue";
+import {defineProps, inject, onMounted, ref} from "vue";
 
 const axios = inject('axios');
 const updateAxiosParams = inject('updateAxiosParams');
+const showModalWindow = inject('showModalWindow');
 
 const props = defineProps({
+    additionalData: Object,
     values: Object
 });
+const additionalUserData = ref(props.additionalData);
 
 function downloadData() {
     let params = {
@@ -36,6 +39,41 @@ function downloadData() {
     let usp = new URLSearchParams(params).toString();
     window.open(axios.defaults.baseURL + "?" + usp).focus();
 }
+
+onMounted(function () {
+    // additionalUserData.value.titles.push("Ciao");
+    // additionalUserData.value.values.push("Ciao");
+    axios.get("?", {
+        "params": {
+            "action": "task", "type": "hssh", "sub": "taskResults", "id": props.values.id, ...updateAxiosParams()
+        }
+    })
+        .then((response) => {
+            let creenderAnnotations = {};
+            let clusterInfo = {};
+            for (let index in response.data.info) {
+                let info = response.data.info[index];
+                let text = "";
+                for (let t of ['ch', 'gr']) {
+                    text += t + ": ";
+                    text += info['annotations'][t]['annotated'] + "/" + info['annotations'][t]['total'];
+                    if (t === "ch") {
+                        text += " - ";
+                    }
+                }
+                creenderAnnotations[index] = text.trim();
+                clusterInfo[index] = info['cluster'];
+            }
+            additionalUserData.value.titles.push("Cluster");
+            additionalUserData.value.titles.push("Annotated");
+            additionalUserData.value.values.push(clusterInfo);
+            additionalUserData.value.values.push(creenderAnnotations);
+        })
+        .catch((reason) => {
+            let debugText = reason.response.statusText + " - " + reason.response.data.error;
+            showModalWindow(debugText);
+        })
+});
 
 </script>
 
