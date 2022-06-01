@@ -6,7 +6,7 @@
             </h2>
             <p>
                 Download data:
-                <button class="btn btn-success" @click="downloadData"><i class="bi bi-filetype-xls"></i> Microsoft Excel</button>
+                <button class="btn btn-success ms-1" @click="downloadData"><i class="bi bi-filetype-xls"></i> Microsoft Excel</button>
             </p>
         </div>
     </div>
@@ -58,9 +58,6 @@ onMounted(function () {
             additionalUserData.value.titles.push("Annotated");
             additionalUserData.value.values.push(clusterInfo);
             additionalUserData.value.values.push(creenderAnnotations);
-            console.log(response.data);
-            console.log(additionalUserData.value);
-            // projectList.value = response.data.records;
         })
         .catch((reason) => {
             let debugText = reason.response.statusText + " - " + reason.response.data.error;
