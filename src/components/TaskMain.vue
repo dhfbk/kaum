@@ -21,59 +21,78 @@
             <PicButton :always-text="true" @click="goBack"
                        :text="$t('task.back').capitalize()" color="yellow" icon="arrow-90deg-up"/>
         </div>
-        <div class="row mt-5">
-            <div class="col-md-9">
-                <h2 class="display-2">
-                    {{ $t('student.plur').capitalize() }}
+
+        <div class="accordion mt-5" id="accordionTaskStudents">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingTaskStudents">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                        {{ $t('student.plur').capitalize() }}
+                    </button>
                 </h2>
-            </div>
-            <div class="col-md-3 text-end">
-                <!--       <button class="btn btn-primary btn-sm" @click="this.$router.push('/projects/new')">
-                        <i class="bi bi-file-earmark-plus"></i> Add educator
-                      </button> -->
-            </div>
-        </div>
-        <p v-if="taskInfo.students.length == 0">
-            {{ $t('student.no').capitalize() }}
-        </p>
-        <div v-else class="table-responsive">
-            <table class="table table-nowrap">
-                <thead>
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">{{ $t('user.username').capitalize() }}</th>
-                    <th scope="col">{{ $t('name').capitalize() }}</th>
-                    <th v-for="(t, index) in additionalUserData.titles" :key="index">{{ t }}</th>
-                    <th scope="col">{{ $t('status').capitalize() }}</th>
-                    <th scope="col">{{ $t('action.plur').capitalize() }}</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr v-for="e in taskInfo.students" :key="updateTotal + '_' + e.id" class="align-middle">
-                    <th scope="row">{{ e.id }}</th>
-                    <td>{{ e.username }}</td>
-                    <td>
+                <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingTaskStudents"
+                     data-bs-parent="#accordionTaskStudents">
+                    <div class="accordion-body">
+                        <div class="row mt-2">
+                            <div class="col-md-9">
+                                <h2 class="display-2">
+                                    {{ $t('student.plur').capitalize() }}
+                                </h2>
+                            </div>
+                            <div class="col-md-3 text-end">
+                            </div>
+                        </div>
+                        <p v-if="taskInfo.students.length == 0">
+                            {{ $t('student.no').capitalize() }}
+                        </p>
+                        <div v-else class="table-responsive">
+                            <table class="table table-nowrap">
+                                <thead>
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th scope="col">{{ $t('user.username').capitalize() }}</th>
+                                    <th scope="col">{{ $t('name').capitalize() }}</th>
+                                    <th v-for="(t, index) in additionalUserData.titles" :key="index">{{ t }}</th>
+                                    <th scope="col">{{ $t('status').capitalize() }}</th>
+                                    <th scope="col">{{ $t('action.plur').capitalize() }}</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr v-for="e in taskInfo.students" :key="updateTotal + '_' + e.id" class="align-middle">
+                                    <th scope="row">{{ e.id }}</th>
+                                    <td>{{ e.username }}</td>
+                                    <td>
                         <span class="dark-enable" :data-username="e.username" :id="e.username + '_change_name'"
                               data-title="Edit name">{{ e.data.name }}</span>
-                    </td>
-                    <td v-for="(obj, index) in additionalUserData.values" :key="index">{{ obj[e.id] }}</td>
-                    <td>
+                                    </td>
+                                    <td v-for="(obj, index) in additionalUserData.values" :key="index">{{
+                                            obj[e.id]
+                                        }}
+                                    </td>
+                                    <td>
                         <span v-if="e.data.disabled" class="badge bg-danger">{{
                                 $t('user.disabled').capitalize()
                             }}</span>
-                        <span v-else class="badge bg-success">{{ $t('user.active').capitalize() }}</span>
-                    </td>
-                    <td>
-                        <PicButton v-if="!e.data.disabled" @click="toggleUser(e.id)"
-                                   :text="$t('action.disable').capitalize()" color="warning"
-                                   icon="x-circle" :disabled="userLoading.has(e.id)"/>
-                        <PicButton v-else @click="toggleUser(e.id)" :text="$t('action.enable').capitalize()"
-                                   color="warning" icon="brightness-high"
-                                   :disabled="userLoading.has(e.id)"/>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+                                        <span v-else class="badge bg-success">{{
+                                                $t('user.active').capitalize()
+                                            }}</span>
+                                    </td>
+                                    <td>
+                                        <PicButton v-if="!e.data.disabled" @click="toggleUser(e.id)"
+                                                   :text="$t('action.disable').capitalize()" color="warning"
+                                                   icon="x-circle" :disabled="userLoading.has(e.id)"/>
+                                        <PicButton v-else @click="toggleUser(e.id)"
+                                                   :text="$t('action.enable').capitalize()"
+                                                   color="warning" icon="brightness-high"
+                                                   :disabled="userLoading.has(e.id)"/>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <component :is="component" :values="taskInfo" :additionalData="additionalUserData"/>
 
