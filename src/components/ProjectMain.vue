@@ -14,6 +14,8 @@
                 <p>
                     {{ $t("project.status").capitalize() }}:
                     <project-badge :p="projectInfo"></project-badge>
+                    - {{ $t("language").capitalize() }}:
+                    <span class="badge bg-secondary">{{ projectInfo.data.language }}</span>
                 </p>
                 <project-buttons :p="projectInfo" :inside="true"
                                  @update="updateProject"></project-buttons>

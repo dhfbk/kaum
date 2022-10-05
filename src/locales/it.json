@@ -2,6 +2,7 @@
     "name": "nome",
     "empty": "non presente",
     "language_short": "lingua",
+    "language": "lingua",
     "status": "stato",
     "loading": "caricamento in corso",
     "closed": "chiuso",

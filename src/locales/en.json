@@ -2,6 +2,7 @@
     "name": "name",
     "empty": "empty",
     "language_short": "lang",
+    "language": "language",
     "status": "status",
     "loading": "loading",
     "closed": "closed",
