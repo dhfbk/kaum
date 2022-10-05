@@ -79,10 +79,12 @@ switch ($InputData['sub']) {
         $sheet->setCellValue('A1', "Annotation ID");
         $sheet->setCellValue('B1', "Username");
         $sheet->setCellValue('C1', "Sentence ID");
-        $sheet->setCellValue('D1', "Dataset name");
-        $sheet->setCellValue('E1', "Sentence");
-        $sheet->setCellValue('F1', "Actions");
-        $sheet->setCellValue('G1', "Date/time");
+        $sheet->setCellValue('D1', "Type");
+        $sheet->setCellValue('E1', "Dataset name");
+        $sheet->setCellValue('F1', "Sentence");
+        $sheet->setCellValue('G1', "Actions");
+        $sheet->setCellValue('H1', "Annotation time");
+        $sheet->setCellValue('I1', "Date/time");
 
         $i = 2;
         while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
@@ -104,15 +106,21 @@ switch ($InputData['sub']) {
                     }
                 }
             }
+            $annotationTime = 0.0;
+            if (isset($row['data']['annotationTime'])) {
+                $annotationTime = $row['data']['annotationTime'];
+            }
 
             $sheet->setCellValue('A' . $i, intval($row['annotation_id']));
             $sheet->setCellValue('B' . $i, $row['username']);
             $sheet->setCellValue('C' . $i, intval($row['sentence_id']));
-            $sheet->setCellValue('D' . $i, $row['name']);
-            $sheet->setCellValue('E' . $i, $row['content']);
-            $sheet->setCellValue('F' . $i, implode("\n", $actions));
-            $sheet->setCellValue('G' . $i, $row['created_at']);
-            $sheet->getStyle('F' . $i)->getAlignment()->setWrapText(true);
+            $sheet->setCellValue('D' . $i, $row['type']);
+            $sheet->setCellValue('E' . $i, $row['name']);
+            $sheet->setCellValue('F' . $i, $row['content']);
+            $sheet->setCellValue('G' . $i, implode("\n", $actions));
+            $sheet->setCellValue('H' . $i, floatval($annotationTime));
+            $sheet->setCellValue('I' . $i, $row['created_at']);
+            $sheet->getStyle('G' . $i)->getAlignment()->setWrapText(true);
 
             $i++;
             // print_r($row);

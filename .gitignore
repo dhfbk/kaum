@@ -24,7 +24,7 @@ pnpm-debug.log*
 
 package-lock.json
 api/composer.lock
-api/vendor
+api/vendor*
 api/config.php
 api/info.php
 api/setup.php
