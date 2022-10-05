@@ -1,5 +1,5 @@
 <template>
-<!--    <p>{{ values }}</p>-->
+    <!--    <p>{{ values }}</p>-->
     <h1 class="display-1">
         {{ title }}
     </h1>
@@ -22,7 +22,7 @@
                                 {{ store.state.options.task_name_minlength }} characters long.
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-lg-4 col-md-8">
                             <label class="form-label" for="taskType">Task type</label>
                             <select v-model="values.type" name="type"
                                     class="form-control" id="taskType" required>
@@ -30,22 +30,37 @@
                                 <option v-for="(t, i) in typeOptions" :value="i" :key="i">{{ t }}</option>
                             </select>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-lg-2 col-md-4">
                             <label class="form-label" for="numberOfStudents">Students</label>
                             <input v-model="values.students" name="students" class="form-control" id="numberOfStudents"
                                    type="number" min="1" :max="store.state.options.task_max_students"
                                    placeholder="Number of students" required/>
                             <div class="invalid-feedback">Number of students is required and must be > 0.</div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label" for="defaultPasswords">Default password complexity</label>
-                            <select v-model="values.passwords" name="passwords" class="form-select" required>
+                        <div
+                            :class="{'col-md-12 col-lg-6': values.passwords != 'duplicate', 'col-md-4 col-lg-3': values.passwords == 'duplicate'}">
+                            <label class="form-label" for="defaultPasswords">Password complexity</label>
+                            <select v-model="values.passwords" name="passwords"
+                                    id="defaultPasswords"
+                                    class="form-select" required>
                                 <option value="">[Select one]</option>
                                 <option value="trivial">Trivial (same as username)</option>
                                 <option value="easy">Easy (existing word plus random number)</option>
                                 <option value="difficult">Difficult (random character sequence)</option>
+                                <option value="duplicate">Duplicate:</option>
                             </select>
                             <div class="invalid-feedback">Select a password complexity.</div>
+                        </div>
+                        <div v-if="values.passwords == 'duplicate'" class="col-lg-3 col-md-8">
+                            <label class="form-label" for="duplicateTask">Duplicate task users</label>
+                            <div v-if="tasksLoaded && tasks.length == 0">
+                                <span class="badge bg-danger">No confirmed tasks in project</span>
+                            </div>
+                            <select v-model="values.duplicateTask" name="duplicateTask" id="duplicateTask"
+                                    class="form-select" required>
+                                <option v-for="t in tasks" :value="t.id" :key="t.id">#{{t.id}} - {{ t.name }}</option>
+                            </select>
+                            <div class="invalid-feedback">Select a task.</div>
                         </div>
                     </div>
                 </div>
@@ -56,7 +71,8 @@
                     <component :is="formComponents[values.type]" :values="values" :underValidation="underValidation"/>
                 </div>
             </div>
-            <div class="card mb-3" v-show="store.state.options.use_temporal_settings && store.state.options.use_temporal_settings !== '0'">
+            <div class="card mb-3"
+                 v-show="store.state.options.use_temporal_settings && store.state.options.use_temporal_settings !== '0'">
                 <h5 class="card-header">Temporal settings</h5>
                 <div class="card-body">
                     <div class="row gy-3 mb-3">
@@ -80,11 +96,13 @@
                                     <span class="input-group-text d-md-flex d-none">From</span>
                                     <Datepicker class="form-control" id="dr1"
                                                 v-model="values.time.start_date" format="dd/MM/yyyy"
-                                                autoApply :enableTimePicker="false" :clearable="false" :utc="true"></Datepicker>
+                                                autoApply :enableTimePicker="false" :clearable="false"
+                                                :utc="true"></Datepicker>
                                     <span class="input-group-text">to</span>
                                     <Datepicker class="form-control" id="dr1"
                                                 v-model="values.time.end_date" format="dd/MM/yyyy"
-                                                autoApply :enableTimePicker="false" :clearable="false" :utc="true"></Datepicker>
+                                                autoApply :enableTimePicker="false" :clearable="false"
+                                                :utc="true"></Datepicker>
                                 </div>
                             </div>
                         </div>
@@ -187,6 +205,9 @@ const updateAxiosParams = inject("updateAxiosParams");
 const cloneText = ref("");
 const title = ref("");
 
+const tasks = ref([]);
+const tasksLoaded = ref(false);
+
 const typeOptions = inject('typeOptions');
 const formComponents = inject('formComponents');
 
@@ -251,8 +272,7 @@ function copyValuesForClonation(o1, o2, tiLabels) {
 onMounted(async function () {
     if (route.meta.action === 'edit') {
         title.value = "Edit task";
-    }
-    else {
+    } else {
         title.value = "New task";
     }
     if (route.params.cloneID) {
@@ -272,13 +292,32 @@ onMounted(async function () {
             .finally(function () {
                 if (route.meta.action !== 'edit') {
                     cloneText.value = "Clone from task " + route.params.cloneID;
-                }
-                else {
+                } else {
                     cloneText.value = "Editing task " + route.params.cloneID;
                 }
                 loadingClone.value = false;
             });
     }
+
+    axios.get("?", {
+        "params": {
+            "action": "projectInfo", "id": route.params.id, ...updateAxiosParams()
+        }
+    })
+        .then(async (response) => {
+            let assignedValue = false;
+            tasks.value = [];
+            for (let t of response.data.info.tasks) {
+                if (t.confirmed) {
+                    tasks.value.push(t);
+                    if (!assignedValue) {
+                        values.value.duplicateTask = t.id;
+                    }
+                    assignedValue = true;
+                }
+            }
+            tasksLoaded.value = true;
+        });
 });
 
 function back() {

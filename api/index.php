@@ -560,13 +560,33 @@ switch ($Action) {
             dieWithError("This task is already confirmed");
         }
 
+        $Info = $RowTask['data'];
+        $passwords_task = [];
+        if ($Info['passwords'] == "duplicate") {
+            $Row = find("tasks", $Info['duplicateTask'], "Unable to find task");
+            if (!$Row['confirmed']) {
+                dieWithError("Project is not confirmed");
+            }
+            if ($Row['project_id'] != $RowTask['project_id']) {
+                dieWithError("Project IDs must be identical");
+            }
+
+            $query = "SELECT * FROM users WHERE task = '{$Info['duplicateTask']}' ORDER BY id";
+            $result = $mysqli->query($query);
+            while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+                $passwords_task[] = $row['password'];
+            }
+            if (count($passwords_task) != $Info['students']) {
+                dieWithError("Students number mismatch");
+            }
+        }
+
         $query = "UPDATE tasks SET confirmed = '1' WHERE id = '{$RowTask['id']}'";
         $result = $mysqli->query($query);
         if (!$result) {
             dieWithError($mysqli->error);
         }
 
-        $Info = $RowTask['data'];
         $TaskID = $RowTask['id'];
         $ProjectID = $RowTask['project_id'];
 
@@ -585,6 +605,10 @@ switch ($Action) {
 
                 case "difficult":
                     $password = password_generate();
+                    break;
+
+                case "duplicate":
+                    $password = $passwords_task[$i];
                     break;
             }
 
@@ -731,11 +755,18 @@ switch ($Action) {
                 validate($Info, [
                     'name' => 'required|min:' . $Options['task_name_minlength'],
                     'students' => 'required|numeric|min:1|max:' . $Options['task_max_students'],
-                    'passwords' => 'required|in:trivial,easy,difficult'
+                    'passwords' => 'required|in:trivial,easy,difficult,duplicate'
                 ]);
+                if ($Info['passwords'] == "duplicate") {
+                    $taskInfo = checkTaskAvailability($Info['duplicateTask'], false);
+                    if ($taskInfo['data']['students'] != $Info['students']) {
+                        dieWithError("Invalid student number, should be " . $taskInfo['data']['students']);
+                    }
+                }
+
+                // TIME STUFF
                 $Info['time']['start_date_s'] = date("d/m/Y", strtotime($Info['time']['start_date']));
                 $Info['time']['end_date_s'] = date("d/m/Y", strtotime($Info['time']['end_date']));
-                // dieWithError("OK", 400, ["info" => $Info]);
                 if (!empty($Info['automatic_timing'])) {
                     validate($Info['time'], [
                         'afternoon_from' => 'required|date:H:i',
