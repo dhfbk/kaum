@@ -374,6 +374,11 @@ switch ($Action) {
         if (!$result) {
             dieWithError($mysqli->error);
         }
+
+        $clearPassword = $ret['password'];
+        foreach ($TaskTypes as $index => $taskName) {
+            @include("tasks/" . $index . "/_educatorResetPassword.php");
+        }
         break;
 
     case "educatorAdd":
@@ -391,11 +396,12 @@ switch ($Action) {
             }
         }
 
-        $username = educatorName($lastID + 1, $Row['id']);
+        $UserName = educatorName($lastID + 1, $Row['id']);
         $data = [];
         $data['project'] = $Row['id'];
-        $data['username'] = $username;
+        $data['username'] = $UserName;
         $password = password_generate(8);
+        $clearPassword = $password;
         if ($Row['confirmed']) {
             $password = md5($password);
         }
@@ -411,6 +417,7 @@ switch ($Action) {
         if (!$result) {
             dieWithError($mysqli->error);
         }
+        $UserID = $mysqli->insert_id;
 
         $query = "SELECT * FROM users
             WHERE educator = '1' AND project = '{$Row['id']}' AND deleted = '0'";
@@ -422,8 +429,12 @@ switch ($Action) {
         $query = "UPDATE projects SET data = '$dataJson' WHERE id = '{$Row['id']}'";
         $mysqli->query($query);
 
-        $ret['username'] = $username;
-        $ret['password'] = $password;
+        $ret['username'] = $UserName;
+        $ret['password'] = $clearPassword;
+
+        foreach ($TaskTypes as $index => $taskName) {
+            @include("tasks/" . $index . "/_educatorAdd.php");
+        }
         break;
 
     case "projectAdd":

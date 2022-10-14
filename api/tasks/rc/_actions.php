@@ -103,7 +103,7 @@ switch ($InputData['sub']) {
             $user = new \ATDev\RocketChat\Users\User($row['username']);
             $user->info();
 
-            $channelName = $data['type_info']['channel_name'];
+            // $channelName = $data['type_info']['channel_name'];
             $group = new \ATDev\RocketChat\Groups\Group($RoomID);
             $i = $group->info();
 
