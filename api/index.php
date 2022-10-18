@@ -769,7 +769,7 @@ switch ($Action) {
                     'passwords' => 'required|in:trivial,easy,difficult,duplicate'
                 ]);
                 if ($Info['passwords'] == "duplicate") {
-                    $taskInfo = checkTaskAvailability($Info['duplicateTask'], false);
+                    $taskInfo = checkTaskAvailability($Info['duplicateTask'], false, false);
                     if ($taskInfo['data']['students'] != $Info['students']) {
                         dieWithError("Invalid student number, should be " . $taskInfo['data']['students']);
                     }

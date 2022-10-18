@@ -221,7 +221,7 @@ function checkTask($id = 0, $userID = 0, $projectID = 0) {
     return $Row;
 }
 
-function checkTaskAvailability($id, $checkClosed = true) {
+function checkTaskAvailability($id, $checkClosed = true, $checkEnabled = true) {
     $Row = find("tasks", $id, "Unable to find task");
     $RowProject = checkProjectAvailability($Row['project_id']);
     $Row['project_info'] = $RowProject;
@@ -231,7 +231,7 @@ function checkTaskAvailability($id, $checkClosed = true) {
     if (!$Row['confirmed']) {
         dieWithError("Task is unconfirmed");
     }
-    if ($Row['disabled']) {
+    if ($checkEnabled && $Row['disabled']) {
         dieWithError("Task is disabled");
     }
     if ($checkClosed && $Row['closed']) {
