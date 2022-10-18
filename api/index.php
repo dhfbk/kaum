@@ -736,6 +736,16 @@ switch ($Action) {
             case "info":
                 $Row = checkTask($_REQUEST['id'], 0, $_REQUEST['project_id']);
                 $ret['info'] = $Row;
+
+                if ($ret['info']['data']['passwords'] == "duplicate") {
+                    $query = "SELECT * FROM tasks WHERE id = '{$ret['info']['data']['duplicateTask']}'";
+                    $result_dp = $mysqli->query($query);
+                    while ($row_dp = $result_dp->fetch_array(MYSQLI_ASSOC)) {
+                        $ret['info']['data']['duplicateTaskInfo'] = $row_dp;
+                        $ret['info']['data']['duplicateTaskInfo']['data'] = json_decode($ret['info']['data']['duplicateTaskInfo']['data'], true);
+                    }
+                }
+
                 $ret['info']['students'] = [];
                 $query = "SELECT * FROM users
                     WHERE task = '{$Row['id']}' AND educator = '0' AND deleted = '0'";
