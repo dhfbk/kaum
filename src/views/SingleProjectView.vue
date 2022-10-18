@@ -72,6 +72,7 @@ function getInitialValues() {
     return {
         type: '',
         students: store.state.options.task_default_students,
+        disabledStatus: store.state.options.task_default_disabledStatus,
         passwords: "",
         type_info: {files: {}},
         time: {

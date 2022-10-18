@@ -22,7 +22,7 @@
                                 {{ store.state.options.task_name_minlength }} characters long.
                             </div>
                         </div>
-                        <div class="col-lg-4 col-md-8">
+                        <div class="col-lg-3 col-md-7">
                             <label class="form-label" for="taskType">Task type</label>
                             <select v-model="values.type" name="type"
                                     class="form-control" id="taskType" required>
@@ -30,12 +30,20 @@
                                 <option v-for="(t, i) in typeOptions" :value="i" :key="i">{{ t }}</option>
                             </select>
                         </div>
-                        <div class="col-lg-2 col-md-4">
+                        <div class="col-lg-2 col-md-3">
                             <label class="form-label" for="numberOfStudents">Students</label>
                             <input v-model="values.students" name="students" class="form-control" id="numberOfStudents"
                                    type="number" min="1" :max="store.state.options.task_max_students"
                                    placeholder="Number of students" required/>
                             <div class="invalid-feedback">Number of students is required and must be > 0.</div>
+                        </div>
+                        <div class="col-lg-1 col-md-2">
+                            <label class="form-label" for="disabledStatus">Disabled</label>
+                            <select v-model="values.disabledStatus" name="disabledStatus"
+                                    class="form-control" id="disabledStatus" required>
+                                <option value="0">No</option>
+                                <option value="1">Yes</option>
+                            </select>
                         </div>
                         <div
                             :class="{'col-md-12 col-lg-6': values.passwords != 'duplicate', 'col-md-4 col-lg-3': values.passwords == 'duplicate'}">
@@ -261,6 +269,7 @@ function copyValuesForClonation(o1, o2, tiLabels) {
     o1.passwords = o2.passwords;
     o1.automatic_timing = o2.automatic_timing;
     o1.duplicateTask = o2.duplicateTask;
+    o1.disabledStatus = o2.disabledStatus;
     if (o2.time !== undefined) {
         o1.time = o2.time;
     }

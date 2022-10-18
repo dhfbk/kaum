@@ -629,7 +629,7 @@ switch ($Action) {
                 "username" => $username,
                 "password" => $password,
                 "educator" => 0,
-                "data" => json_encode(["name" => "", "disabled" => false])
+                "data" => json_encode(["name" => "", "disabled" => !!$Info['disabledStatus']])
             ];
 
             $query = queryinsert("users", $data);
