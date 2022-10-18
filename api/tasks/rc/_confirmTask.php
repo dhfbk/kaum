@@ -8,7 +8,7 @@ if (!$TaskID) {
     Variables: $TaskID, $Info (editable)
 */
 
-// $ret['log'] = [];
+$ret['log'] = [];
 $group = null;
 $groupName = "t" . $TaskID . "-" . $Info['type_info']['channel_name'];
 
@@ -17,7 +17,7 @@ try {
     $group->setName($groupName);
     $result = $group->create();
     $Info['type_info']['channel_id'] = $group->getGroupId();
-    // $ret['log'][] = "Group {$groupName} created successfully";
+    $ret['log'][] = date("H:i:s")." - Group {$groupName} created successfully";
 } catch (Exception $e) {
     // $ret['log'][] = "Error in creating group {$groupName}: " . $e->getMessage();
     dieWithError($e->getMessage());
@@ -51,13 +51,13 @@ while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
         $user->setPassword($row['password']);
 
         $user->create();
-        // $ret['log'][] = "User {$row['username']} created successfully";
+        $ret['log'][] = date("H:i:s")." - User {$row['username']} created successfully";
         $group->invite($user);
-        // $ret['log'][] = "User {$row['username']} added to group {$groupName}";
+        $ret['log'][] = date("H:i:s")." - User {$row['username']} added to group {$groupName}";
         $r = $user->setActiveStatus(false);
-        // if ($r) {
-        //     $ret['log'][] = "User {$row['username']} deactivated";
-        // }
+        if ($r) {
+            $ret['log'][] = date("H:i:s")." - User {$row['username']} deactivated";
+        }
         // else {
         //     $ret['log'][] = "Error in deactivating {$row['username']}: " . $user->getError();
         // }
@@ -81,6 +81,7 @@ if (!$Info['type_info']['teacher_can_join']) {
     $message->setEmoji(":sos:");
     $message->setText("Educators cannot join this conversation. If you send */sos* (slash + sos) in the chat, the educators are notified and are allowed to the chat. Other users are notified that someone asks for help, but the caller's identity is not revealed.");
     $result = $message->postMessage();
+    $ret['log'][] = date("H:i:s")." - Initial message sent";
 }
 
 $dataJson = addslashes(json_encode($Info));
