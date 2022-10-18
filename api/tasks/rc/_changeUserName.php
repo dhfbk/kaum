@@ -9,6 +9,9 @@ if (!$Username) {
 */
 
 if ($Field == "name") {
+    if (!$NewValue) {
+        $NewValue = $Username;
+    }
     $user = new \ATDev\RocketChat\Users\User($Username);
     $user->info();
     $user->setName($NewValue);
