@@ -117,9 +117,7 @@
                     <tr v-for="e in projectInfo.tasks" :key="e.id" class="align-middle">
                         <th scope="row">{{ e.id }}</th>
                         <td>
-                            <img :src="`${publicPath}/img/tasks/${e.tool}.png`" :alt="e.tool" :title="e.tool"
-                                 height="20"/>
-                            <span class="ms-2 badge bg-primary">{{ e.tool }}</span>
+                            <ToolType :tool="e.tool"/>
                         </td>
                         <td>{{ e.name }}</td>
                         <td>{{ e.students }}</td>
@@ -154,11 +152,11 @@ import TaskButtons from "@/components/objects/TaskButtons";
 import TaskBadge from "@/components/objects/TaskBadge";
 import ProjectBadge from "@/components/objects/ProjectBadge";
 import {useI18n} from "vue-i18n";
+import ToolType from "@/components/objects/ToolType";
 
 const showModalWindow = inject('showModalWindow');
 const axios = inject('axios');
 const updateAxiosParams = inject('updateAxiosParams');
-const publicPath = process.env.BASE_URL;
 
 const store = useStore();
 

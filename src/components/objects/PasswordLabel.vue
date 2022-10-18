@@ -21,7 +21,6 @@ function toggle() {
 }
 
 function update() {
-    console.log(password.value);
     emit("change", password.value);
 }
 </script>

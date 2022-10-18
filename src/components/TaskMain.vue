@@ -24,7 +24,43 @@
 
         <div class="accordion mt-5" id="accordionTaskStudents">
             <div class="accordion-item">
-                <h2 class="accordion-header" id="headingTaskStudents">
+                <h2 class="accordion-header" id="headingTaskInfo">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapseInfo" aria-expanded="true" aria-controls="collapseInfo">
+                        Info
+                    </button>
+                </h2>
+                <div id="collapseInfo" class="accordion-collapse collapse show" aria-labelledby="headingTaskInfo"
+                     data-bs-parent="#accordionTaskStudents">
+                    <div class="accordion-body">
+                        <dl class="row" v-if="infoData && Object.keys(infoData['_titles']).length > 0">
+                            <dt class="col-sm-3">Type:</dt>
+                            <dd class="col-sm-9"><ToolType :tool="taskInfo['tool']"/></dd>
+                            <dt class="col-sm-3">Passwords:</dt>
+                            <dd class="col-sm-9" v-if="taskInfo['data']['passwords'] == 'duplicate'">Duplicated:
+                                <ToolType :tool="taskInfo['data']['duplicateTaskInfo']['tool']"/>
+                                #{{taskInfo['data']['duplicateTaskInfo']['id']}}
+                                - {{taskInfo['data']['duplicateTaskInfo']['name']}}
+                            </dd>
+                            <dd class="col-sm-9" v-else>
+                                {{ taskInfo['data']['passwords'] }}
+                            </dd>
+                            <template v-for="(v, k) in infoData['_titles']" :key="k">
+                                <dt class="col-sm-3">{{ v }}:</dt>
+                                <dd class="col-sm-9">{{ infoData[k] }}</dd>
+                            </template>
+                        </dl>
+                        <dl class="row" v-if="infoData && Object.keys(infoData['_boolTitles']).length > 0">
+                            <template v-for="(v, k) in infoData['_boolTitles']" :key="k">
+                                <dt class="col-md-5 col-sm-9">{{ v }}:</dt>
+                                <dd class="col-md-1 col-sm-3">{{ infoData[k] }}</dd>
+                            </template>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingTaskInfo">
                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                             data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
                         {{ $t('student.list').capitalize() }}
@@ -94,7 +130,7 @@
                 </div>
             </div>
         </div>
-        <component :is="component" :values="taskInfo" :additionalData="additionalUserData"/>
+        <component :is="component" :values="taskInfo" :additionalData="additionalUserData" :infoData="infoData"/>
 
     </template>
 </template>
@@ -109,6 +145,7 @@ import PicButton from "@/components/objects/PicButton";
 import TaskButtons from "@/components/objects/TaskButtons";
 import TaskBadge from "@/components/objects/TaskBadge";
 import {useI18n} from "vue-i18n";
+import ToolType from "@/components/objects/ToolType";
 
 const DarkEditable = require('@/dark-editable.js').default;
 
@@ -127,6 +164,9 @@ const taskInfo = ref({});
 const additionalUserData = ref({
     "titles": [],
     "values": []
+});
+const infoData = ref({
+    "_titles": {}
 });
 
 // Force reload of dark-editable
@@ -178,6 +218,14 @@ async function updateTask() {
     })
         .then(async (response) => {
             taskInfo.value = response.data.info;
+
+            infoData.value = {"_titles": {}, "_boolTitles": {}};
+            infoData.value['_titles']['created_at'] = "Created at";
+            infoData.value['_titles']['students'] = "Students";
+            infoData.value['_data'] = taskInfo.value['data'];
+            infoData.value['created_at'] = taskInfo.value['created_at'];
+            infoData.value['students'] = taskInfo.value['data']['students'];
+
             component.value = defineAsyncComponent(() =>
                 import(`@/components/tasks/${taskInfo.value.tool}Main.vue`)
             )
