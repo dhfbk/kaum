@@ -260,6 +260,7 @@ function copyValuesForClonation(o1, o2, tiLabels) {
     o1.students = o2.students;
     o1.passwords = o2.passwords;
     o1.automatic_timing = o2.automatic_timing;
+    o1.duplicateTask = o2.duplicateTask;
     if (o2.time !== undefined) {
         o1.time = o2.time;
     }
@@ -305,7 +306,7 @@ onMounted(async function () {
         }
     })
         .then(async (response) => {
-            let assignedValue = false;
+            let assignedValue = (values.value.duplicateTask == true);
             tasks.value = [];
             for (let t of response.data.info.tasks) {
                 if (t.confirmed) {
