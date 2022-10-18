@@ -12,6 +12,7 @@ $ret['clone_values'] = [
     "demo_password"
 ];
 $datasets = creender_listDatasets($Row['project_id']);
+$ret['info']['data']['creender_datasets'] = $datasets;
 foreach ($datasets as $index => $dataset) {
     $ret['clone_values'][] = "dataset_" . $index;
 }
