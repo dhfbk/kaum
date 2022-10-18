@@ -44,6 +44,7 @@ import {useStore} from "vuex";
 // import {useRoute} from "vue-router";
 
 const props = defineProps({
+    infoData: Object,
     "values": {
         type: Object
     }
@@ -57,12 +58,22 @@ const rcLoaded = ref(false);
 const store = useStore();
 const noMessages = ref("No messages");
 
+const infoData = ref(props.infoData);
+
 function getGoodDate(value) {
     const date = new Date(Date.parse(value));
     return date.toLocaleString();
 }
 
 onMounted(async function () {
+    infoData.value['_titles']['rc_description'] = "Description";
+    infoData.value['rc_description'] = infoData.value['_data']['type_info']['description'];
+    infoData.value['_titles']['cr_channel_name'] = "Channel name";
+    infoData.value['cr_channel_name'] = infoData.value['_data']['type_info']['channel_name'];
+
+    infoData.value['_boolTitles']['cr_teacher_can_join'] = "Educators can always enter the chat";
+    infoData.value['cr_teacher_can_join'] = infoData.value['_data']['type_info']['teacher_can_join'] ? "Yes" : "No";
+
     if (store.state.loggedAdmin || values.value.closed) {
         axios.get("?", {
             "params": {
