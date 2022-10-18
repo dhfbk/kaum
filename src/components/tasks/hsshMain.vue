@@ -24,9 +24,11 @@ const showModalWindow = inject('showModalWindow');
 
 const props = defineProps({
     additionalData: Object,
+    infoData: Object,
     values: Object
 });
 const additionalUserData = ref(props.additionalData);
+const infoData = ref(props.infoData);
 
 function downloadData() {
     let params = {
@@ -41,8 +43,14 @@ function downloadData() {
 }
 
 onMounted(function () {
-    // additionalUserData.value.titles.push("Ciao");
-    // additionalUserData.value.values.push("Ciao");
+    infoData.value['_titles']['hs_annotations'] = "Ann. per instance";
+    infoData.value['hs_annotations'] = infoData.value['_data']['type_info']['annotations'];
+
+    infoData.value['_titles']['hs_dataset_ch'] = "Dataset chat";
+    infoData.value['hs_dataset_ch'] = infoData.value['_data']['hssh_datasets']['ch'][infoData.value['_data']['type_info']['dataset_ch']];
+    infoData.value['_titles']['hs_dataset_gr'] = "Dataset graffiti";
+    infoData.value['hs_dataset_gr'] = infoData.value['_data']['hssh_datasets']['gr'][infoData.value['_data']['type_info']['dataset_gr']];
+
     axios.get("?", {
         "params": {
             "action": "task", "type": "hssh", "sub": "taskResults", "id": props.values.id, ...updateAxiosParams()

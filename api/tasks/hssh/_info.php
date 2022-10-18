@@ -5,3 +5,5 @@ if (!$Row) {
 }
 
 $ret['clone_values'] = ['annotations', 'dataset_ch', 'dataset_gr'];
+$datasets = hssh_listDatasets($Row['project_id']);
+$ret['info']['data']['hssh_datasets'] = $datasets;
