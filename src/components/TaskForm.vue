@@ -315,7 +315,7 @@ onMounted(async function () {
         }
     })
         .then(async (response) => {
-            let assignedValue = (values.value.duplicateTask == true);
+            let assignedValue = (!!values.value.duplicateTask == true);
             tasks.value = [];
             for (let t of response.data.info.tasks) {
                 if (t.confirmed) {
