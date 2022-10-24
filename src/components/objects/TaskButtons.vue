@@ -21,7 +21,7 @@
                    icon="brightness-high"
                    :disabled="loading"/>
 
-        <div class="btn-group">
+        <div class="btn-group dropdown position-static">
             <button type="button" class="btn btn-sm btn-info me-3 dropdown-toggle"
                     data-bs-toggle="dropdown" role="button"
                     :title="$t('action.user_passwords').capitalize()" :disabled="false">
@@ -30,7 +30,7 @@
                         $t('action.user_passwords').capitalize()
                     }}</span>
             </button>
-            <div class="dropdown-menu">
+            <div class="dropdown-menu position-absolute">
                 <a class="dropdown-item" @click="getUsersPasswords(e.id, 'taskPasswords')">List</a>
                 <a class="dropdown-item" @click="getUsersPasswords(e.id, 'taskPasswordsNotes')">Notes</a>
             </div>
