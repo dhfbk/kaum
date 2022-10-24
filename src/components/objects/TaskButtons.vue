@@ -1,26 +1,46 @@
 <template>
-    <PicButton :always-text="inside" v-if="!inside && e.confirmed" @click="enterTask(e.id)" :text="$t('action.manage').capitalize()"
+    <PicButton :always-text="inside" v-if="!inside && e.confirmed" @click="enterTask(e.id)"
+               :text="$t('action.manage').capitalize()"
                color="success" icon="box-arrow-in-right"/>
-    <PicButton :always-text="inside" v-if="!e.confirmed" @click="confirmTask(e.id)" :text="$t('action.confirm').capitalize()" color="info" icon="check-circle"
+    <PicButton :always-text="inside" v-if="!e.confirmed" @click="confirmTask(e.id)"
+               :text="$t('action.confirm').capitalize()" color="info" icon="check-circle"
                :disabled="loading"/>
 
-    <PicButton :always-text="inside" v-if="!e.confirmed" @click="editTask(e.id)" :text="$t('action.edit').capitalize()" color="warning"
+    <PicButton :always-text="inside" v-if="!e.confirmed" @click="editTask(e.id)" :text="$t('action.edit').capitalize()"
+               color="warning"
                icon="pencil" :disabled="loading"/>
 
-    <PicButton :always-text="inside" @click="cloneTask(e.id)" :text="$t('action.clone').capitalize()" color="yellow" icon="file-earmark-break"/>
+    <PicButton :always-text="inside" @click="cloneTask(e.id)" :text="$t('action.clone').capitalize()" color="yellow"
+               icon="file-earmark-break"/>
     <template v-if="!e.closed && e.confirmed">
-        <PicButton :always-text="inside" v-if="!e.disabled" @click="toggleTask(e.id)" :text="$t('action.disable').capitalize()" color="warning"
+        <PicButton :always-text="inside" v-if="!e.disabled" @click="toggleTask(e.id)"
+                   :text="$t('action.disable').capitalize()" color="warning"
                    icon="x-circle" :disabled="loading"/>
-        <PicButton :always-text="inside" v-else @click="toggleTask(e.id)" :text="$t('action.enable').capitalize()" color="warning"
+        <PicButton :always-text="inside" v-else @click="toggleTask(e.id)" :text="$t('action.enable').capitalize()"
+                   color="warning"
                    icon="brightness-high"
                    :disabled="loading"/>
 
-        <PicButton :always-text="inside" @click="getUsersPasswords(e.id)" :text="$t('action.user_passwords').capitalize()" color="info"
-                   icon="key"/>
+        <div class="btn-group">
+            <button type="button" class="btn btn-sm btn-info me-3 dropdown-toggle"
+                    data-bs-toggle="dropdown" role="button"
+                    :title="$t('action.user_passwords').capitalize()" :disabled="false">
+                <i class="bi" :class="'bi-key'"></i>
+                <span class="ms-2 d-none me-1" :class="[inside ? 'd-sm-inline' : 'd-lg-inline']">{{
+                        $t('action.user_passwords').capitalize()
+                    }}</span>
+            </button>
+            <div class="dropdown-menu">
+                <a class="dropdown-item" @click="getUsersPasswords(e.id, 'taskPasswords')">List</a>
+                <a class="dropdown-item" @click="getUsersPasswords(e.id, 'taskPasswordsNotes')">Notes</a>
+            </div>
+        </div>
+
         <PicButton :always-text="inside" v-if="e.disabled" :disabled="loading" @click="closeTask(e.id)"
                    :text="$t('action.close').capitalize()" color="dark" icon="door-closed-fill"/>
     </template>
-    <PicButton :always-text="inside" v-if="!inside && (e.disabled || e.closed || !e.confirmed)" :text="$t('action.delete').capitalize()"
+    <PicButton :always-text="inside" v-if="!inside && (e.disabled || e.closed || !e.confirmed)"
+               :text="$t('action.delete').capitalize()"
                @click="deleteTask(e.id)" color="danger" icon="trash"/>
 
 </template>
@@ -56,9 +76,9 @@ function editTask(cloneID) {
     emit('edit', cloneID);
 }
 
-function getUsersPasswords(taskID) {
+function getUsersPasswords(taskID, action) {
     let params = {
-        "action": "taskPasswords",
+        "action": action,
         "project_id": props.id,
         "id": taskID,
         ...updateAxiosParams()

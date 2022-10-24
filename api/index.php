@@ -317,6 +317,49 @@ switch ($Action) {
         exit();
         break;
 
+    case "taskPasswordsNotes":
+        // print_r($_REQUEST);
+        $Row = checkTask($_REQUEST['id'], 0, $_REQUEST['project_id']);
+
+        $pdf = new Fpdf();
+
+        $widths = [15, 110];
+        $heights = [10, 65, 120, 175, 230];
+        $paddingTop = 8;
+        $paddingLeft = 10;
+
+        $query = "SELECT *
+            FROM users
+            WHERE task = '{$Row['id']}' AND educator = '0' AND deleted = '0'";
+        $result = $mysqli->query($query);
+        while (true) {
+            $pdf->AddPage();
+            $pdf->SetFont('Arial', '', 14);
+            foreach ($heights as $height) {
+                foreach ($widths as $width) {
+                    $row = $result->fetch_array(MYSQLI_ASSOC);
+                    if (!$row) {
+                        break 3;
+                    }
+                    $data = json_decode($row['data'], true);
+                    $pdf->SetXY($width + $paddingLeft, $height + $paddingTop);
+                    $pdf->Image('img/logo_kidactions4horizontal.png', null, null, 50);
+                    $pdf->SetXY($width + $paddingLeft, $height + 20);
+                    $pdf->Cell(40, 10, 'Username: ' . $row['username'], 0, 1);
+                    $pdf->SetXY($width + $paddingLeft, $height + 30);
+                    $pdf->Cell(40, 10, 'Password: ' . $row['password']);
+                    if ($data['name']) {
+                        $pdf->SetXY($width + $paddingLeft, $height + 40);
+                        $pdf->Cell(40, 10, 'Name: ' . $data['name']);
+                    }
+                }
+            }
+        }
+
+        $pdf->Output();
+        exit();
+        break;
+
     case "projectDelete":
         checkAdmin();
         $Row = find("projects", $_REQUEST['id'], "Unable to find project");
