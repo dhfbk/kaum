@@ -6,11 +6,14 @@ if (!$TaskID) {
 
 /*
     Variables: $TaskID, $Info (editable)
+    $DeleteTask, $DeleteError (to cancel)
 */
 
 $ret['log'] = [];
 $group = null;
 $groupName = "t" . $TaskID . "-" . $Info['type_info']['channel_name'];
+
+dieWithError(print_r($Info, true));
 
 try {
     $group = new \ATDev\RocketChat\Groups\Group();
