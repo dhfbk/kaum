@@ -682,8 +682,17 @@ switch ($Action) {
             $result = $mysqli->query($query);
         }
 
+        $DeleteTask = false;
+        $DeleteError = "";
         $TaskID = $RowTask['id'];
         @include("tasks/" . $RowTask['tool'] . "/_confirmTask.php");
+        if ($DeleteTask) {
+            $query = "UPDATE tasks SET confirmed = '0' WHERE id = '{$RowTask['id']}'";
+            $result = $mysqli->query($query);
+            $query = "DELETE FROM users WHERE task = '{$RowTask['id']}'";
+            $result = $mysqli->query($query);
+            dieWithError($DeleteError);
+        }
         break;
 
     case "closeTask":

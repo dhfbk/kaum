@@ -40,8 +40,9 @@ function downloadData() {
 }
 
 onMounted(function () {
-    // additionalUserData.value.titles.push("Ciao");
-    // additionalUserData.value.values.push("Ciao");
+    additionalUserData.value.titles = [];
+    additionalUserData.value.values = [];
+
     infoData.value['_titles']['cr_description'] = "Question text";
     infoData.value['cr_description'] = infoData.value['_data']['type_info']['description'];
     infoData.value['_titles']['cr_comment'] = "Comment question";

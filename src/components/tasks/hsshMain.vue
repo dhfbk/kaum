@@ -43,6 +43,9 @@ function downloadData() {
 }
 
 onMounted(function () {
+    additionalUserData.value.titles = [];
+    additionalUserData.value.values = [];
+
     infoData.value['_titles']['hs_annotations'] = "Ann. per instance";
     infoData.value['hs_annotations'] = infoData.value['_data']['type_info']['annotations'];
 
