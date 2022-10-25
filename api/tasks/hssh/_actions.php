@@ -217,7 +217,7 @@ switch ($InputData['sub']) {
         $cluster = addslashes($UserData['rc_cluster']);
         $set = addslashes($_REQUEST['set']);
         $query = "SELECT c.id,
-                   r.content,
+                   r.content, r.goldLabel, r.goldTokens,
                    GROUP_CONCAT(a.session_id) annotations
             FROM   `hssh_ds_task_cluster` c
                    LEFT JOIN hssh_rows r
@@ -229,8 +229,7 @@ switch ($InputData['sub']) {
             WHERE  c.task = '{$RowTask['id']}'
                    AND c.cluster = '{$cluster}'
                    AND d.type = '{$set}'
-            GROUP  BY c.id,
-                      r.content";
+            GROUP  BY c.id, r.content";
         // $ret['query'] = str_replace("\n", " ", $query);
         $result = $mysqli->query($query);
         if (!$result->num_rows) {
@@ -271,9 +270,19 @@ switch ($InputData['sub']) {
             }
         }
 
+        $goldIDs = [];
+        foreach (hssh_getTokens($FinalRow['goldTokens']) as $token) {
+            $token = trim($token);
+            if (!$token) {
+                continue;
+            }
+            $goldIDs[] = intval($token);
+        }
         $ret['sentence'] = [
                 "id" => $FinalRow['id'],
                 "tokens" => hssh_getTokens($FinalRow['content']),
+                "goldLabel" => $FinalRow['goldLabel'],
+                "goldTokens" => $goldIDs,
                 "annotated" => $FinalRow['annotations'] ? true : false
             ];
         break;
@@ -293,7 +302,7 @@ switch ($InputData['sub']) {
         $offset = $_REQUEST['offset'] ? $_REQUEST['offset'] : 0;
         $session_id = session_id();
         $query = "SELECT c.id,
-                   r.content,
+                   r.content, r.goldLabel, r.goldTokens,
                    GROUP_CONCAT(a.session_id) annotations
             FROM   `hssh_ds_task_cluster` c
                    LEFT JOIN hssh_rows r
@@ -310,8 +319,7 @@ switch ($InputData['sub']) {
                                     WHERE  user = '{$RowTask['user_info']['id']}'
                                            AND deleted = '0'
                                            AND session_id != '{$session_id}')
-            GROUP  BY c.id,
-                      r.content";
+            GROUP  BY c.id, r.content";
         // $ret['query'] = str_replace("\n", " ", $query);
         $result = $mysqli->query($query);
         if (!$result->num_rows) {
@@ -329,9 +337,19 @@ switch ($InputData['sub']) {
             $query_id = $i % $result->num_rows;
             $result->data_seek($query_id);
             $row = $result->fetch_array(MYSQLI_ASSOC);
+            $goldIDs = [];
+            foreach (hssh_getTokens($row['goldTokens']) as $token) {
+                $token = trim($token);
+                if (!$token) {
+                    continue;
+                }
+                $goldIDs[] = intval($token);
+            }
             $ret['sentences'][] = [
                 "id" => $row['id'],
                 "tokens" => hssh_getTokens($row['content']),
+                "goldLabel" => $row['goldLabel'],
+                "goldTokens" => $goldIDs,
                 "annotated" => $row['annotations'] ? true : false
             ];
         }

@@ -8,6 +8,8 @@ validate($Info['type_info'], [
     'annotations' => 'required|min:1|max:' . $Info['students'],
 ]);
 
+$ret['rows'] = [];
+
 if (!$CheckOnly) {
     $Info['type_info']['added_datasets'] = [];
     $datasets = hssh_listDatasets($RowProject['id']);
@@ -39,10 +41,23 @@ if (!$CheckOnly) {
 
             while (($line = fgets($handle)) !== false) {
                 $line = trim($line);
+                if (!$line) {
+                    continue;
+                }
+                $parts = explode("\t", $line);
                 $data = [
                     "dataset_id" => $datasetID,
-                    "content" => $line
+                    "content" => $parts[0],
+                    "goldLabel" => 0,
+                    "goldTokens" => ""
                 ];
+                if (count($parts) > 1) {
+                    $data["goldLabel"] = $parts[1];
+                    if (count($parts) > 2) {
+                        $data["goldTokens"] = $parts[2];
+                    }
+                }
+                $ret['rows'][] = $data;
                 $query = queryinsert("hssh_rows", $data);
                 $result = $mysqli->query($query);
             }
