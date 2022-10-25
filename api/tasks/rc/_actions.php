@@ -12,28 +12,59 @@ switch ($InputData['sub']) {
         if (!$Row['closed'] && !isAdmin()) {
             dieWithError("Only admins can read messages in running tasks", 401);
         }
-        $channelID = $Row['data']['type_info']['channel_id'];
-
-        $ret['messages'] = [];
-        $group = new \ATDev\RocketChat\Groups\Group($channelID);
-        $result = $group->messages();
-        foreach ($result as $message) {
-            $t = $message->getT();
-            if ($t) {
-                continue;
+        $ret['row'] = $Row;
+        $TaskData = $Row['data'];
+        if (isset($TaskData['type_info']['rc_groups']) && $TaskData['type_info']['rc_groups'] > 1) {
+            $ret['groups'] = [];
+            foreach ($TaskData['type_info']['rc_groups_info'] as $groupInfo) {
+                $channelID = $groupInfo['channel_id'];
+                $messages = [];
+                $group = new \ATDev\RocketChat\Groups\Group($channelID);
+                $result = $group->messages();
+                foreach ($result as $message) {
+                    $t = $message->getT();
+                    if ($t) {
+                        continue;
+                    }
+                    $msg = [];
+                    $msg['ts'] = $message->getTs();
+                    $msg['username'] = $message->getUsername();
+                    $msg['text'] = $message->getMsg();
+                    $messages[] = $msg;
+                    // $ret['messages'][] = $message;
+                    // echo $message->getUsername() . " - ";
+                    // echo $message->getMsg() . "\n";
+                    // print_r($message);
+                }
+                $messages = array_reverse($messages);
+                $ret['groups'][] = $messages;
             }
-            $msg = [];
-            $msg['ts'] = $message->getTs();
-            $msg['username'] = $message->getUsername();
-            $msg['text'] = $message->getMsg();
-            $ret['messages'][] = $msg;
-            // $ret['messages'][] = $message;
-            // echo $message->getUsername() . " - ";
-            // echo $message->getMsg() . "\n";
-            // print_r($message);
-        }
-        $ret['messages'] = array_reverse($ret['messages']);
 
+        }
+        else {
+            $channelID = $Row['data']['type_info']['channel_id'];
+
+            $ret['messages'] = [];
+            $group = new \ATDev\RocketChat\Groups\Group($channelID);
+            $result = $group->messages();
+            foreach ($result as $message) {
+                $t = $message->getT();
+                if ($t) {
+                    continue;
+                }
+                $msg = [];
+                $msg['ts'] = $message->getTs();
+                $msg['username'] = $message->getUsername();
+                $msg['text'] = $message->getMsg();
+                $ret['messages'][] = $msg;
+                // $ret['messages'][] = $message;
+                // echo $message->getUsername() . " - ";
+                // echo $message->getMsg() . "\n";
+                // print_r($message);
+            }
+            $ret['messages'] = array_reverse($ret['messages']);
+
+        }
         // $ret['id'] = $channelID;
         break;
 
@@ -79,53 +110,74 @@ switch ($InputData['sub']) {
         // $ret['user_data'] = $RowUser;
         // $ret['task_data'] = $TaskData;
 
-        if ($TaskData['type_info']['teacher_can_join']) {
-            $ret['message'] = "In this task educators can already join the chat - SOS *not* received by the system";
-            $ret['avatar'] = ":warning:";
-            break;
-        }
+        if (isset($TaskData['type_info']['rc_groups']) && $TaskData['type_info']['rc_groups'] > 1) {
+            if (!isset($TaskData['type_info']['rc_user_channels'][$username])) {
+                $ret['message'] = "User {$username} is not able to ask for SOS here";
+                $ret['avatar'] = ":warning:";
+                break;
+            }
+            $RoomID = $TaskData['type_info']['rc_user_channels'][$username]['channel_id'];
+            $groupIndex = $TaskData['type_info']['rc_user_channels'][$username]['group_index'];
+            $groupInfo = $TaskData['type_info']['rc_groups_info'][$groupIndex];
 
-        if (!$TaskData['type_info']['sos_info']) {
-            $TaskData['type_info']['sos_info'] = [];
-        }
-
-        $RoomID = $TaskData['type_info']['channel_id'];
-
-        $query = "SELECT * FROM users
-            WHERE educator = '1' AND deleted = '0' AND project = '{$RowUser['project']}'";
-        $result = $mysqli->query($query);
-        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-            $data = json_decode($row['data'], true);
-            if ($data['disabled']) {
-                continue;
+            if ($groupInfo['teacher_can_join']) {
+                $ret['message'] = "In this task educators can already join the chat - SOS *not* received by the system";
+                $ret['avatar'] = ":warning:";
+                break;
+            }
+            if (!$groupInfo['sos_info']) {
+                $TaskData['type_info']['rc_groups_info'][$groupIndex]['sos_info'] = [];
             }
 
-            $user = new \ATDev\RocketChat\Users\User($row['username']);
-            $user->info();
+            rc_addEducatorsToChannel($RowUser['project'], $RoomID);
 
-            // $channelName = $data['type_info']['channel_name'];
-            $group = new \ATDev\RocketChat\Groups\Group($RoomID);
-            $i = $group->info();
+            if (!count($TaskData['type_info']['rc_groups_info'][$groupIndex]['sos_info'])) {
+                $message = new \ATDev\RocketChat\Messages\Message();
+                $message->setRoomId($RoomID);
+                $message->setEmoji(":sos:");
+                $message->setText("Someone has called the SOS command, an educator will join the room soon");
+                $result = $message->postMessage();
+            }
 
-            $r = $group->invite($user);
+            $sos_info = [];
+            $sos_info['username'] = $_REQUEST['username'];
+            $sos_info['message'] = $_REQUEST['message'];
+            $sos_info['roomname'] = $_REQUEST['roomname'];
+            $sos_info['datetime'] = date("r");
 
+            $TaskData['type_info']['rc_groups_info'][$groupIndex]['sos_info'][] = $sos_info;
         }
+        else {
+            if ($TaskData['type_info']['teacher_can_join']) {
+                $ret['message'] = "In this task educators can already join the chat - SOS *not* received by the system";
+                $ret['avatar'] = ":warning:";
+                break;
+            }
 
-        if (!count($TaskData['type_info']['sos_info'])) {
-            $message = new \ATDev\RocketChat\Messages\Message();
-            $message->setRoomId($RoomID);
-            $message->setEmoji(":sos:");
-            $message->setText("Someone has called the SOS command, an educator will join the room soon");
-            $result = $message->postMessage();
+            if (!$TaskData['type_info']['sos_info']) {
+                $TaskData['type_info']['sos_info'] = [];
+            }
+
+            $RoomID = $TaskData['type_info']['channel_id'];
+
+            rc_addEducatorsToChannel($RowUser['project'], $RoomID);
+
+            if (!count($TaskData['type_info']['sos_info'])) {
+                $message = new \ATDev\RocketChat\Messages\Message();
+                $message->setRoomId($RoomID);
+                $message->setEmoji(":sos:");
+                $message->setText("Someone has called the SOS command, an educator will join the room soon");
+                $result = $message->postMessage();
+            }
+            
+            $sos_info = [];
+            $sos_info['username'] = $_REQUEST['username'];
+            $sos_info['message'] = $_REQUEST['message'];
+            $sos_info['roomname'] = $_REQUEST['roomname'];
+            $sos_info['datetime'] = date("r");
+
+            $TaskData['type_info']['sos_info'][] = $sos_info;
         }
-        
-        $sos_info = [];
-        $sos_info['username'] = $_REQUEST['username'];
-        $sos_info['message'] = $_REQUEST['message'];
-        $sos_info['roomname'] = $_REQUEST['roomname'];
-        $sos_info['datetime'] = date("r");
-
-        $TaskData['type_info']['sos_info'][] = $sos_info;
 
         $dataJson = addslashes(json_encode($TaskData));
         $query = "UPDATE tasks SET data = '$dataJson' WHERE id = '{$RowUser['task']}'";

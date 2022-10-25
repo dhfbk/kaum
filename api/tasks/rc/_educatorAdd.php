@@ -33,12 +33,27 @@ $query = "SELECT u.id user_id, t.id task_id, p.id project_id, t.data
 $result = $mysqli->query($query);
 while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
     $TaskData = json_decode($row['data'], true);
-    $RoomID = $TaskData['type_info']['channel_id'];
-    if ($TaskData['type_info']['teacher_can_join'] || count($TaskData['type_info']['sos_info'])) {
-        $group = new \ATDev\RocketChat\Groups\Group($RoomID);
-        $i = $group->info();
-        $r = $group->invite($user);
-        $ret['log'][] = "User {$UserName} added to group {$TaskData['type_info']['channel_name']}";
+
+    if (isset($TaskData['type_info']['rc_groups']) && $TaskData['type_info']['rc_groups'] > 1) {
+        foreach ($TaskData['type_info']['rc_groups_info'] as $groupInfo) {
+            $RoomID = $groupInfo['channel_id'];
+            if ($groupInfo['teacher_can_join'] || count($groupInfo['sos_info'])) {
+                $group = new \ATDev\RocketChat\Groups\Group($RoomID);
+                $i = $group->info();
+                $r = $group->invite($user);
+                $ret['log'][] = "User {$UserName} added to group {$groupInfo['channel_name']}";
+            }
+        }
     }
+    else {
+        $RoomID = $TaskData['type_info']['channel_id'];
+        if ($TaskData['type_info']['teacher_can_join'] || count($TaskData['type_info']['sos_info'])) {
+            $group = new \ATDev\RocketChat\Groups\Group($RoomID);
+            $i = $group->info();
+            $r = $group->invite($user);
+            $ret['log'][] = "User {$UserName} added to group {$TaskData['type_info']['channel_name']}";
+        }
+    }
+
 }
 

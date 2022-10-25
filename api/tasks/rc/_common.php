@@ -10,6 +10,30 @@ if (!$result) {
     dieWithError($error);
 }
 
+function rc_addEducatorsToChannel($ProjectID, $RoomID) {
+    global $mysqli;
+
+    $query = "SELECT * FROM users
+        WHERE educator = '1' AND deleted = '0' AND project = '{$ProjectID}'";
+    $result = $mysqli->query($query);
+    while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+        $data = json_decode($row['data'], true);
+        if ($data['disabled']) {
+            continue;
+        }
+
+        $user = new \ATDev\RocketChat\Users\User($row['username']);
+        $user->info();
+
+        // $channelName = $data['type_info']['channel_name'];
+        $group = new \ATDev\RocketChat\Groups\Group($RoomID);
+        $i = $group->info();
+
+        $r = $group->invite($user);
+    }
+}
+
+
 function rc_setTeacherCanJoin($ProjectID, $groupID, &$ret) {
     global $mysqli;
 
@@ -104,7 +128,10 @@ function rc_confirmTask($TaskID, $ProjectID, &$Info, &$ret) {
                     continue;
                 }
                 $groupID = $groupsInfo[$groupIndex]['channel_id'];
-                $userGroups[$row['username']] = $groupID;
+                $userGroups[$row['username']] = [
+                    "channel_id" => $groupID,
+                    "group_index" => $groupIndex
+                ];
                 $group = new \ATDev\RocketChat\Groups\Group($groupID);
                 $group->info();
 
@@ -136,7 +163,7 @@ function rc_confirmTask($TaskID, $ProjectID, &$Info, &$ret) {
         }
 
         $Info['type_info']['rc_groups_info'] = $groupsInfo;
-        $Info['type_info']['rc_usergroups'] = $userGroups;
+        $Info['type_info']['rc_user_channels'] = $userGroups;
     }
     else {
         $groupName = "t" . $TaskID . "-" . $Info['type_info']['channel_name'];

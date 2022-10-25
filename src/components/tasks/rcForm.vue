@@ -111,11 +111,11 @@ watch(() => values.value['students'], () => {
 });
 
 function splitUsers() {
-    console.log(autoStrategy.value);
-    console.log(skipUsers.value);
+    // console.log(autoStrategy.value);
+    // console.log(skipUsers.value);
 
     let totUsers = values.value['students'] - skipUsers.value;
-    console.log(totUsers);
+    // console.log(totUsers);
     if (autoStrategy.value == "1") { // Alternate
         for (let i = 1; i <= values.value['students']; i++) {
             let group = ((i - 1) % values.value['type_info']['rc_groups']) + 1;
