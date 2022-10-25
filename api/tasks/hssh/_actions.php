@@ -225,11 +225,11 @@ switch ($InputData['sub']) {
                    LEFT JOIN hssh_datasets d
                           ON d.id = r.dataset_id
                    LEFT JOIN hssh_annotations a
-                          ON a.sentence = c.id AND a.deleted = '0'
+                          ON a.sentence = c.id AND a.deleted = '0' AND user = '{$RowTask['user_info']['id']}'
             WHERE  c.task = '{$RowTask['id']}'
                    AND c.cluster = '{$cluster}'
                    AND d.type = '{$set}'
-            GROUP  BY c.id, r.content";
+            GROUP  BY c.id, r.content, r.goldLabel, r.goldTokens";
         // $ret['query'] = str_replace("\n", " ", $query);
         $result = $mysqli->query($query);
         if (!$result->num_rows) {
@@ -273,7 +273,7 @@ switch ($InputData['sub']) {
         $goldIDs = [];
         foreach (hssh_getTokens($FinalRow['goldTokens']) as $token) {
             $token = trim($token);
-            if (!$token) {
+            if (!strlen($token)) {
                 continue;
             }
             $goldIDs[] = intval($token);
@@ -310,7 +310,7 @@ switch ($InputData['sub']) {
                    LEFT JOIN hssh_datasets d
                           ON d.id = r.dataset_id
                    LEFT JOIN hssh_annotations a
-                          ON a.sentence = c.id
+                          ON a.sentence = c.id AND a.deleted = '0' AND user = '{$RowTask['user_info']['id']}'
             WHERE  c.task = '{$RowTask['id']}'
                    AND c.cluster = '{$cluster}'
                    AND d.type = '{$set}'
@@ -319,7 +319,7 @@ switch ($InputData['sub']) {
                                     WHERE  user = '{$RowTask['user_info']['id']}'
                                            AND deleted = '0'
                                            AND session_id != '{$session_id}')
-            GROUP  BY c.id, r.content";
+            GROUP  BY c.id, r.content, r.goldLabel, r.goldTokens";
         // $ret['query'] = str_replace("\n", " ", $query);
         $result = $mysqli->query($query);
         if (!$result->num_rows) {
@@ -332,6 +332,7 @@ switch ($InputData['sub']) {
         // $ret['offset'] = $offset;
 
         $thisIndex = 0;
+        // $ret['userInfo'] = $RowTask['user_info'];
         $ret['sentences'] = [];
         for ($i = $offset; $i < $total; $i++) {
             $query_id = $i % $result->num_rows;
@@ -340,7 +341,7 @@ switch ($InputData['sub']) {
             $goldIDs = [];
             foreach (hssh_getTokens($row['goldTokens']) as $token) {
                 $token = trim($token);
-                if (!$token) {
+                if (!strlen($token)) {
                     continue;
                 }
                 $goldIDs[] = intval($token);
