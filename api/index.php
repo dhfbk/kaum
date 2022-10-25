@@ -281,6 +281,7 @@ switch ($Action) {
             $pdf->Cell(50, 10, $row['password'], 1, 0, 'L');
             $pdf->Ln();
         }
+        http_response_code(200);
         $pdf->Output();
         exit();
         break;
@@ -313,6 +314,7 @@ switch ($Action) {
             $pdf->Cell(50, 10, $row['password'], 1, 0, 'L');
             $pdf->Ln();
         }
+        http_response_code(200);
         $pdf->Output();
         exit();
         break;
@@ -356,6 +358,7 @@ switch ($Action) {
             }
         }
 
+        http_response_code(200);
         $pdf->Output();
         exit();
         break;
