@@ -133,90 +133,31 @@ switch ($InputData['sub']) {
 
         break;
 
-        $smtp_info = json_decode($Options['smtp'], true);
-        $mail = new PHPMailer(true);
-        try {
-            $mail->isSMTP();
-            $mail->Host       = $smtp_info['server'];
-            $mail->SMTPAuth   = true;
-            $mail->Username   = $smtp_info['login'];
-            $mail->Password   = $smtp_info['password'];
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port       = $smtp_info['port'];
-
-            $mail->setFrom('ziorufus57@gmail.com', 'Mailer');
-            $mail->addAddress('alessio@apnetwork.it');
-
-            $mail->isHTML(true);
-            $mail->Subject = 'Here is the subject';
-            $mail->Body    = 'This is the HTML message body <b>in bold!</b>';
-            $mail->AltBody = 'This is the body in plain text for non-HTML mail clients';
-
-            $mail->send();
-            $ret['message'] .= ' - Message has been sent';
-        } catch (Exception $e) {
-            $ret['message'] .= " - Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
-        }
-
-
-        break;
-
-        // \ATDev\RocketChat\Chat::setUrl(RC_URL);
-        // $result = \ATDev\RocketChat\Chat::login("admin", $rcPassword);
-        // if (!$result) {
-        //     $error = \ATDev\RocketChat\Chat::getError();
-        //     dieWithError($error);
-        // }
-
-        // // $listing = \ATDev\RocketChat\Users\User::listing();
-        // // print_r($listing);
-
-        // $user = new \ATDev\RocketChat\Users\User("pippo");
+        // $smtp_info = json_decode($Options['smtp'], true);
+        // $mail = new PHPMailer(true);
         // try {
-        //     $user->info();
-        // } catch (\Exception $e) {
-            
-        // }
-        // print_r($user);
+        //     $mail->isSMTP();
+        //     $mail->Host       = $smtp_info['server'];
+        //     $mail->SMTPAuth   = true;
+        //     $mail->Username   = $smtp_info['login'];
+        //     $mail->Password   = $smtp_info['password'];
+        //     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        //     $mail->Port       = $smtp_info['port'];
 
-        // break;
+        //     $mail->setFrom('ziorufus57@gmail.com', 'Mailer');
+        //     $mail->addAddress('alessio@apnetwork.it');
 
-        // // $channel = new \ATDev\RocketChat\Channels\Channel();
-        // // $channel->setName("PLUTO");
-        // // $result = $channel->create();
-        // // print_r($result);
+        //     $mail->isHTML(true);
+        //     $mail->Subject = 'Here is the subject';
+        //     $mail->Body    = 'This is the HTML message body <b>in bold!</b>';
+        //     $mail->AltBody = 'This is the body in plain text for non-HTML mail clients';
 
-        // $channel = new \ATDev\RocketChat\Channels\Channel("GENERAL");
-        // // print_r($channel);
-        // // $result = $channel->info();
-        // $result = $channel->delete();
-        // print_r($result);
-        // exit();
-
-        // $listing = \ATDev\RocketChat\Channels\Channel::listing();
-        // print_r($listing);
-        // exit();
-
-        // break;
-        // try {
-        //     $user = new \ATDev\RocketChat\Users\User();
-        //     $user->setName("John Doe");
-        //     $user->setEmail("john@example.com");
-        //     $user->setUsername("jDoe");
-        //     $user->setPassword("123456");
-
-        //     $result = $user->create();
+        //     $mail->send();
+        //     $ret['message'] .= ' - Message has been sent';
         // } catch (Exception $e) {
-        //     echo $e->getMessage();
-        //     exit();
-        //     $ret['res'] = 'Caught exception: ' . $e->getMessage();
+        //     $ret['message'] .= " - Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
         // }
 
-
-        // if (!$result) {
-        //     dieWithError($user->getError());
-        // }
-
-        // // $ret['res'] = print_r($result, true);
         // break;
+
 }

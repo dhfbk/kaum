@@ -8,6 +8,7 @@ if ($Info['type_info']['rc_groups'] > 1 && $Info['type_info']['rc_uniqueScenario
     unset($Info['type_info']['channel_name']);
     unset($Info['type_info']['description']);
     unset($Info['type_info']['teacher_can_join']);
+    $channels = [];
     for ($i = 1; $i <= $Info['type_info']['rc_groups']; $i++) {
         validate($Info['type_info']['rc_scenario_groups'][$i], [
             'channel_name' => 'required|min:3',
@@ -15,9 +16,13 @@ if ($Info['type_info']['rc_groups'] > 1 && $Info['type_info']['rc_uniqueScenario
         ]);
 
         $err = rc_channelNameIsWrong($Info['type_info']['rc_scenario_groups'][$i]['channel_name']);
+        $channels[$Info['type_info']['rc_scenario_groups'][$i]['channel_name']] = true;
         if ($err) {
             dieWithError($err);
         }
+    }
+    if (count($channels) != $Info['type_info']['rc_groups']) {
+        dieWithError("Channel names must be different");
     }
 }
 

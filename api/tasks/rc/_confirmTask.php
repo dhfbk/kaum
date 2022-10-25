@@ -11,7 +11,7 @@ if (!$TaskID) {
 
 $ret['log'] = [];
 
-$DeleteError = rc_confirmTask($TaskID, $Info, $ret);
+$DeleteError = rc_confirmTask($TaskID, $ProjectID, $Info, $ret);
 if ($DeleteError) {
     $DeleteTask = true;
 }
