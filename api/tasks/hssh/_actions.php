@@ -276,6 +276,9 @@ switch ($InputData['sub']) {
             if (!strlen($token)) {
                 continue;
             }
+            if (!preg_match('/^[0-9]+$/', $token)) {
+                continue;
+            }
             $goldIDs[] = intval($token);
         }
         $ret['sentence'] = [
@@ -342,6 +345,9 @@ switch ($InputData['sub']) {
             foreach (hssh_getTokens($row['goldTokens']) as $token) {
                 $token = trim($token);
                 if (!strlen($token)) {
+                    continue;
+                }
+                if (!preg_match('/^[0-9]+$/', $token)) {
                     continue;
                 }
                 $goldIDs[] = intval($token);

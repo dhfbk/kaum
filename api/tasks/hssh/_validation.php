@@ -45,6 +45,7 @@ if (!$CheckOnly) {
                     continue;
                 }
                 $parts = explode("\t", $line);
+                $parts = array_map("trim", $parts);
                 $data = [
                     "dataset_id" => $datasetID,
                     "content" => $parts[0],
