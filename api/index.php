@@ -346,12 +346,12 @@ switch ($Action) {
                     $data = json_decode($row['data'], true);
                     $pdf->SetXY($width + $paddingLeft, $height + $paddingTop);
                     $pdf->Image('img/logo_kidactions4horizontal.png', null, null, 50);
-                    $pdf->SetXY($width + $paddingLeft, $height + 20);
+                    $pdf->SetXY($width + $paddingLeft, $height + 18);
                     $pdf->Cell(40, 10, 'Username: ' . $row['username'], 0, 1);
-                    $pdf->SetXY($width + $paddingLeft, $height + 30);
+                    $pdf->SetXY($width + $paddingLeft, $height + 25);
                     $pdf->Cell(40, 10, 'Password: ' . $row['password']);
                     if ($data['name']) {
-                        $pdf->SetXY($width + $paddingLeft, $height + 40);
+                        $pdf->SetXY($width + $paddingLeft, $height + 32);
                         $pdf->Cell(40, 10, 'Name: ' . $data['name']);
                     }
                 }
