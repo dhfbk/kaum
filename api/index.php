@@ -633,7 +633,7 @@ switch ($Action) {
             while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
                 $passwords_task[] = $row['password'];
             }
-            if (count($passwords_task) != $Info['students']) {
+            if (count($passwords_task) < $Info['students']) {
                 dieWithError("Students number mismatch");
             }
         }
@@ -835,8 +835,8 @@ switch ($Action) {
                 ]);
                 if ($Info['passwords'] == "duplicate") {
                     $taskInfo = checkTaskAvailability($Info['duplicateTask'], false, false);
-                    if ($taskInfo['data']['students'] != $Info['students']) {
-                        dieWithError("Invalid student number, should be " . $taskInfo['data']['students']);
+                    if ($taskInfo['data']['students'] < $Info['students']) {
+                        dieWithError("Invalid student number, should be less than " . $taskInfo['data']['students']);
                     }
                 }
 
