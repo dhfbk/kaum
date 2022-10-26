@@ -138,7 +138,12 @@ onMounted(async function () {
     let studentGroups = {};
     for (let s of props.values['students']) {
         if (infoData.value['_data']['type_info']['rc_user_channels']) {
-            studentGroups[s['id']] = infoData.value['_data']['type_info']['rc_user_channels'][s['username']]['group_index'] + 1;
+            if (infoData.value['_data']['type_info']['rc_user_channels'][s['username']]) {
+                studentGroups[s['id']] = infoData.value['_data']['type_info']['rc_user_channels'][s['username']]['group_index'] + 1;
+            }
+            else {
+                studentGroups[s['id']] = 0;
+            }
         } else {
             studentGroups[s['id']] = 1;
         }
