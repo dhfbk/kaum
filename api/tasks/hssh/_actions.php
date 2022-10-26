@@ -383,4 +383,11 @@ switch ($InputData['sub']) {
             dieWithError($mysqli->error);
         }
         break;
+
+    case "ping":
+        checkStudentLogin();
+        $RowUser = find("users", $_SESSION['StudentLogin'], "Unable to find user");
+        $RowProject = checkProject($RowUser['project'], $RowUser['id']);
+        $RowTask = checkTaskAvailability($RowUser['task']);
+        break;
 }
