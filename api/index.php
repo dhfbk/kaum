@@ -335,13 +335,17 @@ switch ($Action) {
             WHERE task = '{$Row['id']}' AND educator = '0' AND deleted = '0'";
         $result = $mysqli->query($query);
         while (true) {
-            $pdf->AddPage();
+            $addedPage = false;
             $pdf->SetFont('Arial', '', 14);
             foreach ($heights as $height) {
                 foreach ($widths as $width) {
                     $row = $result->fetch_array(MYSQLI_ASSOC);
                     if (!$row) {
                         break 3;
+                    }
+                    if (!$addedPage) {
+                        $pdf->AddPage();
+                        $addedPage = true;
                     }
                     $data = json_decode($row['data'], true);
                     $pdf->SetXY($width + $paddingLeft, $height + $paddingTop);
