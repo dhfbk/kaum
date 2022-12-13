@@ -4,6 +4,11 @@ use Rakit\Validation\Validator;
 
 // Global stuff
 
+if (!$DB_PASSWORD) {
+    $DB_PASSWORD = file_get_contents(MYSQL_ADMIN_FILE);
+    $DB_PASSWORD = trim($DB_PASSWORD);
+}
+
 $mysqli = @new mysqli($DB_HOST, $DB_USERNAME, $DB_PASSWORD, $DB_NAME);
 if ($mysqli->connect_errno) {
     dieWithError("Error in DB connection: " . $mysqli->connect_error);
