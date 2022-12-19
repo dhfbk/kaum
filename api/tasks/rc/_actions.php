@@ -10,6 +10,58 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 switch ($InputData['sub']) {
+
+    case "getScenarios":
+        checkLogin();
+        $query = "SELECT * FROM rc_scenarios WHERE deleted = '0' ORDER BY id";
+        $result = $mysqli->query($query);
+        $ret['data'] = [];
+        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+            $ret['data'][] = $row;
+        }
+        $query = "SELECT * FROM rc_schools WHERE deleted = '0' ORDER BY id";
+        $result = $mysqli->query($query);
+        $ret['schools'] = [];
+        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+            $ret['schools'][] = $row;
+        }
+        break;
+
+    case "deleteScenario":
+        checkAdmin();
+        $Row = find("rc_scenarios", $_REQUEST['id'], "Scenario not found");
+        $query = "UPDATE rc_scenarios SET deleted = '1' WHERE id = '{$Row['id']}'";
+        $result = $mysqli->query($query);
+        break;
+
+    case "addScenario":
+        checkAdmin();
+        $ret['debug'] = $_REQUEST;
+        validate($_REQUEST['data'], [
+            'channel_name' => 'required|min:3',
+            'description' => 'required',
+            'title' => 'required',
+            'school' => 'required',
+            'lang' => 'required' // TODO: check lang
+        ]);
+        $err = rc_channelNameIsWrong($_REQUEST['data']['channel_name']);
+        if ($err) {
+            dieWithError($err);
+        }
+        $data = [
+            "name" => $_REQUEST['data']['title'],
+            "lang" => $_REQUEST['data']['lang'],
+            "label" => $_REQUEST['data']['channel_name'],
+            "school" => $_REQUEST['data']['school'],
+            "description" => $_REQUEST['data']['description']
+        ];
+        $query = queryinsert("rc_scenarios", $data);
+        $result = $mysqli->query($query);
+        if (!$result) {
+            dieWithError($mysqli->error);
+        }
+        break;
+
     case "chat":
         $Row = checkTask($_REQUEST['id'], 0, $_REQUEST['project_id']);
         if (!$Row['closed'] && !isAdmin()) {
