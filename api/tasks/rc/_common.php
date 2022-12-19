@@ -10,6 +10,52 @@ if (!$result) {
     dieWithError($error);
 }
 
+function rc_getMessages($channelID, $UserMap) {
+    $messages = [];
+    $group = new \ATDev\RocketChat\Groups\Group($channelID);
+    $result = $group->messages();
+    foreach ($result as $message) {
+        $m = rc_getMessageInfo($message, $UserMap);
+        if ($m) {
+            $messages[] = $m;
+        }
+    }
+    $messages = array_reverse($messages);
+    return $messages;
+}
+
+function rc_getMessageInfo($message, $UserMap) {
+    $t = $message->getT();
+    if ($t) {
+        return false;
+    }
+    $msg = [];
+    $msg['id'] = $message->getMessageId();
+    $msg['ts'] = $message->getTs();
+    $msg['username'] = $message->getUsername();
+    $msg['name'] = $UserMap[$message->getUsername()];
+    $msg['text'] = $message->getMsg();
+    return $msg;
+}
+
+function loadUserMap($taskID) {
+    global $mysqli;
+
+    $UserMap = [];
+    $query = "SELECT * FROM users WHERE task = '{$taskID}' ORDER BY id";
+    $result = $mysqli->query($query);
+    while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+        $row['data'] = json_decode($row['data'], true);
+        if (isset($row['data']['name']) && $row['data']['name']) {
+            $UserMap[$row['username']] = $row['data']['name'];
+        }
+        else {
+            $UserMap[$row['username']] = "";
+        }
+    }
+    return $UserMap;
+}
+
 function rc_addEducatorsToChannel($ProjectID, $RoomID) {
     global $mysqli;
 

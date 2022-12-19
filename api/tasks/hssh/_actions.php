@@ -134,7 +134,7 @@ switch ($InputData['sub']) {
         $sheet->getColumnDimension('F')->setAutoSize(true);
         $sheet->getColumnDimension('G')->setAutoSize(true);
 
-        $filename = "hssh-results-t" . $Row['id'];
+        $filename = "p" . $Row['project_id'] . "-hssh-results-t" . $Row['id'];
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="'.$filename.'.xlsx"');
         header('Cache-Control: max-age=0');
