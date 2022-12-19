@@ -26,7 +26,7 @@
             </div>
         </div>
         <template v-if="values.type_info['rc_uniqueScenario'] == '1'">
-            <rc-scenario :values="values.type_info"/>
+            <rc-scenario-task :values="values.type_info" :show="false" :scenarios="scenarios" id=""/>
         </template>
         <template v-else>
             <template v-for="groupIndex in parseInt(values['type_info']['rc_groups'])" :key="groupIndex">
@@ -36,7 +36,7 @@
                         <h5>Scenario {{ groupIndex }}</h5>
                     </div>
                 </div>
-                <rc-scenario :values="values.type_info['rc_scenario_groups'][groupIndex]"/>
+                <rc-scenario-task :values="values.type_info['rc_scenario_groups'][groupIndex]" :show="false" :scenarios="scenarios" :id="groupIndex.toString()"/>
             </template>
         </template>
         <template v-if="values.type_info['rc_groups'] > 1">
@@ -92,9 +92,8 @@
 
 <script setup>
 
-import {defineProps, onBeforeMount, ref, watch} from "vue";
-import RcScenario from "@/components/tasks/rcScenario";
-// import {useStore} from "vuex";
+import {defineProps, onBeforeMount, ref, watch, inject, onMounted} from "vue";
+import RcScenarioTask from "@/components/tasks/rcScenarioTask";
 
 // const store = useStore();
 const props = defineProps({
@@ -105,6 +104,9 @@ const props = defineProps({
 const values = ref(props.values);
 const skipUsers = ref(0);
 const autoStrategy = ref(0);
+const axios = inject('axios');
+const updateAxiosParams = inject('updateAxiosParams');
+const scenarios = ref({});
 
 watch(() => values.value['students'], () => {
     updateGroups();
@@ -162,6 +164,33 @@ function updateGroups() {
         }
     }
 }
+
+onMounted(async function() {
+    await axios.get("?", {
+        "params": {
+            "action": "task",
+            "sub": "getScenarios",
+            "type": "rc",
+            ...updateAxiosParams()
+        }
+    })
+        .then((response) => {
+            let schools = {};
+            for (let s of response.data.schools) {
+                schools[s.id] = s.name;
+            }
+            scenarios.value = {};
+            for (let s of response.data.data) {
+                s.goodname = "[" + s.lang + "] " + s.name + " (" + schools[s.school] + ")";
+                scenarios.value[s.id] = s;
+            }
+            // console.log(schools);
+            // scenarios.value = response.data.data;
+        })
+        .catch((reason) => {
+            console.log(reason);
+        });
+});
 
 onBeforeMount(async function () {
     if (values.value['type_info']['rc_uniqueScenario'] === undefined) {
