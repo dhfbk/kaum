@@ -165,11 +165,11 @@ async function loadTypeOptions() {
 }
 
 .was-validated .no-validation:focus {
-    color: #212529;
-    background-color: #fff;
-    border-color: #86b7fe;
-    outline: 0;
-    box-shadow: 0 0 0 0.25rem rgb(13 110 253 / 25%);
+    /*color: #212529;*/
+    /*background-color: #fff;*/
+    border-color: #ced4da !important;
+    /*outline: 0;*/
+    box-shadow: 0 0 0 0.25rem rgb(13 110 253 / 25%) !important;
 }
 
 .was-validated .form-control.no-validation:valid,
@@ -177,6 +177,35 @@ async function loadTypeOptions() {
     border-color: #212529;
     background: none;
     padding: .375rem .75rem;
+}
+
+.was-validated .form-check-input.no-validation:valid,
+.was-validated .form-check-input.no-validation:invalid {
+    border-color: rgba(0, 0, 0, 0.25);
+}
+
+.was-validated .form-check-input.no-validation:invalid:checked,
+.was-validated .form-check-input.no-validation:valid:checked {
+    background-color: #5b7fbf;
+}
+
+.was-validated .form-check-input.no-validation:valid ~ .form-check-label,
+.form-check-input.no-validation.is-valid ~ .form-check-label,
+.was-validated .form-check-input.no-validation:invalid ~ .form-check-label,
+.form-check-input.no-validation.is-invalid ~ .form-check-label {
+    color: inherit;
+}
+
+.was-validated .form-select.no-validation:invalid:not([multiple]):not([size]),
+.was-validated .form-select.no-validation:invalid:not([multiple])[size="1"],
+.form-select.no-validation.is-invalid:not([multiple]):not([size]),
+.form-select.no-validation.is-invalid:not([multiple])[size="1"],
+.was-validated .form-select.no-validation:valid:not([multiple]):not([size]),
+.was-validated .form-select.no-validation:valid:not([multiple])[size="1"],
+.form-select.no-validation.is-valid:not([multiple]):not([size]),
+.form-select.no-validation.is-valid:not([multiple])[size="1"] {
+    background-image: none;
+    border-color: #ced4da;
 }
 
 .was-validated .form-control-sm.no-validation:valid,
