@@ -2,7 +2,7 @@
     <button :class="classes" type="button"
             class="btn btn-sm" :title="text" :disabled="props.disabled">
         <i class="bi" :class="'bi-' + props.icon"></i>
-        <span class="ms-2 d-none" :class="[alwaysText ? 'd-sm-inline' : 'd-lg-inline']">{{ text }}</span>
+        <span v-if="text" class="ms-2 d-none" :class="[alwaysText ? 'd-sm-inline' : 'd-lg-inline']">{{ text }}</span>
     </button>
 </template>
 
