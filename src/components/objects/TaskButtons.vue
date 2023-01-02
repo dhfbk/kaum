@@ -2,6 +2,7 @@
     <PicButton :always-text="inside" v-if="!inside && e.confirmed" @click="enterTask(e.id)"
                :text="$t('action.manage').capitalize()"
                color="success" icon="box-arrow-in-right"/>
+    <PicButton :always-text="inside" @click="downloadData(e.id)" text="Export data" color="success" icon="filetype-xls"/>
     <PicButton :always-text="inside" v-if="!e.confirmed" @click="confirmTask(e.id)"
                :text="$t('action.confirm').capitalize()" color="info" icon="check-circle"
                :disabled="loading"/>
@@ -67,6 +68,19 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['cloneTask', 'update', 'edit']);
+
+function downloadData(id) {
+    let params = {
+        "action": "task",
+        "type": props.e.tool,
+        "sub": "exportResults",
+        "project_id": props.id,
+        "id": id,
+        ...updateAxiosParams()
+    };
+    let usp = new URLSearchParams(params).toString();
+    window.open(axios.defaults.baseURL + "?" + usp).focus();
+}
 
 function cloneTask(cloneID) {
     emit('cloneTask', cloneID);

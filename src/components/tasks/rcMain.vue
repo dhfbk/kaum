@@ -17,37 +17,21 @@
             <h2>
                 Chat text
             </h2>
+            <p>
+                Download data:
+                <button class="btn btn-success ms-1" @click="downloadData"><i class="bi bi-filetype-xls"></i> Microsoft
+                    Excel
+                </button>
+            </p>
             <p v-if="!rcLoaded">Loading...</p>
             <template v-else>
                 <div v-if="messages.length > 0">
-                    <ul class="list-group">
-                        <li v-for="(message, i) in messages" :key="i" class="list-group-item">
-                            <div class="row">
-                                <div class="col-12 col-md-5 col-lg-4 text-end">
-                                    {{ getGoodDate(message.ts) }} - <code>{{ message.username }}</code>
-                                </div>
-                                <div class="col-12 col-md-7 col-lg-8">
-                                    {{ message.text }}
-                                </div>
-                            </div>
-                        </li>
-                    </ul>
+                    <rc-messages :messages="messages"></rc-messages>
                 </div>
                 <div v-else-if="groups.length > 0">
                     <template v-for="(g, i) in groups" :key="'group-' + i">
                         <h3 class="mt-3">Group {{ i + 1 }}</h3>
-                        <ul class="list-group">
-                            <li v-for="(message, i) in g" :key="i" class="list-group-item">
-                                <div class="row">
-                                    <div class="col-12 col-md-5 col-lg-4 text-end">
-                                        {{ getGoodDate(message.ts) }} - <code>{{ message.username }}</code>
-                                    </div>
-                                    <div class="col-12 col-md-7 col-lg-8">
-                                        {{ message.text }}
-                                    </div>
-                                </div>
-                            </li>
-                        </ul>
+                        <rc-messages :messages="g"></rc-messages>
                     </template>
                 </div>
                 <p v-else>{{ noMessages }}</p>
@@ -57,10 +41,10 @@
 </template>
 
 <script setup>
-/* eslint-disable */
+
 import {inject, defineProps, onMounted, ref} from "vue";
 import {useStore} from "vuex";
-// import {useRoute} from "vue-router";
+import RcMessages from "@/components/tasks/rcMessages";
 
 const props = defineProps({
     additionalData: Object,
@@ -68,7 +52,6 @@ const props = defineProps({
     values: Object
 });
 const values = ref(props.values);
-// const route = useRoute();
 const axios = inject('axios');
 const updateAxiosParams = inject('updateAxiosParams');
 const messages = ref([]);
