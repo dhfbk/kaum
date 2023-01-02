@@ -4,11 +4,18 @@ if (!$TaskID) {
     exit();
 }
 
-$clusterNo = intdiv($Info['students'], $Info['type_info']['annotations']);
+// $DeleteTask = true;
+// $DeleteError = "Errore";
+
+$query = "SELECT * FROM users WHERE task = '{$TaskID}' AND deleted = '0' ORDER BY id";
+$resultUser = $mysqli->query($query);
+$numStudents = $resultUser->num_rows;
+
+$clusterNo = intdiv($numStudents, $Info['type_info']['annotations']);
 
 foreach (['ch', 'gr'] as $type) {
-    $datasetID = $Info['type_info']['dataset_' . $type];
-    $query = "SELECT * FROM hssh_rows WHERE dataset_id = '$datasetID' ORDER BY id";
+    $IDs = "'".implode("', '", array_map('addslashes', $Info['type_info']['datasets_ok'][$type]))."'";
+    $query = "SELECT * FROM hssh_rows WHERE dataset_id IN ({$IDs}) ORDER BY id";
     $result = $mysqli->query($query);
     $per_cluster = intdiv($result->num_rows, $clusterNo);
     $reminder = $result->num_rows % $clusterNo;
@@ -29,10 +36,8 @@ foreach (['ch', 'gr'] as $type) {
     }
 }
 
-$query = "SELECT * FROM users WHERE task = '{$TaskID}' AND deleted = '0' ORDER BY id";
-$result = $mysqli->query($query);
 $i = 0;
-while ($RowUser = $result->fetch_array(MYSQLI_ASSOC)) {
+while ($RowUser = $resultUser->fetch_array(MYSQLI_ASSOC)) {
     $data = json_decode($RowUser['data'], true);
     $data['rc_cluster'] = $i + 1;
     $dataJson = addslashes(json_encode($data));
@@ -40,5 +45,3 @@ while ($RowUser = $result->fetch_array(MYSQLI_ASSOC)) {
     $mysqli->query($query);
     $i = ($i + 1) % $clusterNo;
 }
-// $ret['clusterNo'] = $clusterNo;
-

@@ -4,9 +4,120 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 switch ($InputData['sub']) {
+    case "addDataset":
+
+        // TODO: Duplicated code (see _actions.php for Creender)
+        checkLogin();
+        $insertInfo = [];
+        if (isAdmin()) {
+            if (empty($_REQUEST['save'])) {
+                $insertInfo['user_id'] = -1;
+            }
+        }
+        else {
+            $UserID = $_SESSION['Login'];
+            if (!empty($_REQUEST['save'])) {
+                $RowUser = find("users", $UserID, "Unable to find user");
+                $RowProject = checkProject($RowUser['project'], $RowUser['id']);
+                $insertInfo['project_id'] = $RowProject['id'];
+            }
+            else {
+                $insertInfo['user_id'] = $UserID;
+            }
+        }
+
+        $Info = json_decode($_REQUEST['info'], true);
+        if (!$_FILES['f'] || !count($_FILES['f']['name'])) {
+            dieWithError("No files found");
+        }
+        if (count($_FILES['f']['name']) != 1) {
+            dieWithError("Only one file can be uploaded");
+        }
+        validate($Info, [
+            'name' => 'required|min:' . $Options['hssh_dataset_name_minlength'],
+            'type' => 'required|in:gr,ch',
+            'lang' => 'required',
+        ]);
+
+        // $_FILES['f']['tmp_name'][0]
+        $filename = $_FILES['f']['tmp_name'][0];
+        $type = $Info['type'];
+        $handle = fopen($filename, "r");
+        if (!$handle) {
+            dieWithError("Error in parsing file");
+        }
+        $insertInfo['type'] = $Info['type'];
+        $insertInfo['title'] = $Info['name'];
+        $insertInfo['lang'] = $Info['lang'];
+        $insertInfo['name'] = $_FILES['f']['name'][0];
+        $query = queryinsert("hssh_datasets", $insertInfo);
+        $result = $mysqli->query($query);
+        if (!$result) {
+            dieWithError($mysqli->error);
+        }
+
+        $datasetID = $mysqli->insert_id;
+
+        while (($line = fgets($handle)) !== false) {
+            $line = trim($line);
+            if (!$line) {
+                continue;
+            }
+            $parts = explode("\t", $line);
+            $parts = array_map("trim", $parts);
+            $data = [
+                "dataset_id" => $datasetID,
+                "content" => $parts[0],
+                "goldLabel" => 0,
+                "goldTokens" => ""
+            ];
+            if (count($parts) > 1) {
+                $data["goldLabel"] = $parts[1];
+                if (count($parts) > 2) {
+                    $data["goldTokens"] = $parts[2];
+                }
+            }
+            $ret['rows'][] = $data;
+            $query = queryinsert("hssh_rows", $data);
+            $result = $mysqli->query($query);
+        }
+
+        fclose($handle);
+
+        $ret['files'] = $_FILES;
+        $ret['req'] = $_REQUEST;
+        $ret['insert_info'] = $insertInfo;
+        break;
+
     case "listDatasets":
-        $RowProject = checkProject($InputData['project_id']);
-        $ret['datasets'] = hssh_listDatasets($RowProject['id']);
+        // $RowProject = checkProject($InputData['project_id']);
+        // $ret['datasets'] = hssh_listDatasets($RowProject['id']);
+        checkLogin();
+        $projectID = 0;
+        if ($InputData['project_id']) {
+            $RowProject = checkProject($InputData['project_id']);
+            $projectID = $RowProject['id'];
+        }
+        $ret['datasets'] = hssh_listDatasets($projectID);
+        break;
+
+    case "deleteDataset":
+        $RowDataset = find("hssh_datasets", $_REQUEST['id'], "Unable to find dataset");
+        if ($RowDataset['deleted']) {
+            dieWithError("Dataset does not exist");
+        }
+        if (!isAdmin()) {
+            $RowUser = find("users", $UserID, "Unable to find user");
+            $RowProject = checkProject($RowUser['project'], $RowUser['id']);
+            if ($RowDataset['project_id'] != $RowProject['id']) {
+                dieWithError("You do not have permission to delete this dataset");
+            }
+        }
+        $query = "UPDATE hssh_datasets SET deleted = '1' WHERE id = '{$RowDataset['id']}'";
+        $result = $mysqli->query($query);
+        if (!$result) {
+            dieWithError($mysqli->error);
+        }
         break;
 
     case "taskResults":
