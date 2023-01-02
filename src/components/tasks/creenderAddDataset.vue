@@ -15,7 +15,7 @@
         <div class="col-12">
             <input ref="creenderFileInput" class="form-control"
                    :class="{'form-control-sm': useSave, 'no-validation': useSave}" type="file"
-                   @change="handleFileUpload( fileType, $event )" id="formCreenderAddDataset_file" :required="useSave ? null : true">
+                   @change="handleFileUpload($event)" id="formCreenderAddDataset_file" :required="useSave ? null : true">
             <div class="invalid-feedback">You must select a file.</div>
         </div>
         <div v-if="props.useSave" class="col-12">
@@ -75,7 +75,7 @@ function cancel() {
     abortController.value.abort();
 }
 
-function handleFileUpload(type, event) {
+function handleFileUpload(event) {
     values.value['files'] = event.target.files;
 }
 
@@ -124,6 +124,12 @@ function addDataset() {
     let formData = new FormData();
     for (let k in data) {
         formData.append(k, data[k]);
+    }
+
+    if (!values.value['files']) {
+        showModalWindow("You must specify a file");
+        disableSubmit.value = false;
+        return;
     }
 
     for (let f of values.value['files']) {

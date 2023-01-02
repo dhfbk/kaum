@@ -1,6 +1,6 @@
 <template>
     <div class="accordion-item">
-        <h2 class="accordion-header" id="collapseCreenderDatasets_head">
+        <h2 class="accordion-header" id="collapseRcDatasets_head">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                     data-bs-target="#collapseRcScenarios" aria-expanded="false"
                     aria-controls="collapseRcScenarios">

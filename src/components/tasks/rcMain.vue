@@ -41,11 +41,10 @@
 </template>
 
 <script setup>
-/* eslint-disable */
+
 import {inject, defineProps, onMounted, ref} from "vue";
 import {useStore} from "vuex";
 import RcMessages from "@/components/tasks/rcMessages";
-// import {useRoute} from "vue-router";
 
 const props = defineProps({
     additionalData: Object,
@@ -53,7 +52,6 @@ const props = defineProps({
     values: Object
 });
 const values = ref(props.values);
-// const route = useRoute();
 const axios = inject('axios');
 const updateAxiosParams = inject('updateAxiosParams');
 const messages = ref([]);
